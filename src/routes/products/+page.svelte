@@ -7,9 +7,24 @@
 
   export let data: PageData
   const { products } = data
+
+  let filteredProducts = products
+
+  $:console.log(filteredProducts)
 </script>
 
-<Cardapio data={products}>
+<Cardapio
+  data={filteredProducts}
+  onFilterChange={value => {
+    filteredProducts = products.map(product => ({
+      ...product,
+      products: product.products.filter(productInner => {
+        let nome = productInner.name.toLowerCase()
+        return nome.includes(value.toLowerCase())
+      })
+    })).filter(product => product.products.length > 0)
+  }}
+>
   {#snippet card(c)}
     <a href="/products/{c.id}">
       <Card1

@@ -22,6 +22,7 @@
   import type { RouterOutputs, RouterInputs } from '$trpc/router'
   import { goto } from '$app/navigation'
   import EditRowCurrency from '$lib/components/table/EditRowCurrency.svelte'
+  import EditRole from './EditRole.svelte'
 
   type Users = RouterOutputs['auth']['paginatedUsers']['rows'][0]
 
@@ -42,7 +43,11 @@
     },
     {
       header: 'Permissoes',
-      accessorFn: row => JSON.stringify(row.permissions),
+      cell: info =>
+        renderComponent(EditRole, {
+          permissions: info.row.original.permissions,
+          userId: info.row.original.id,
+        }),
     },
 
     {

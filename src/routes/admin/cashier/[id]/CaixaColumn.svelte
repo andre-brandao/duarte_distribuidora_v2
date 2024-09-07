@@ -9,14 +9,14 @@
   },0)
 </script>
 
-<ul class="mb-4 max-h-[70vh] overflow-scroll text-center text-lg">
+<ul class="mb-4 max-h-[50vh] overflow-scroll text-center text-lg">
   {#each Object.values($cart) as item}
     <div class="flex items-center justify-between">
       <div class="flex">
         <label class="swap m-1 rounded-md border p-1">
           <input type="checkbox" bind:checked={item.is_retail} />
-          <div class="swap-on">Atacado</div>
-          <div class="swap-off">Varejo</div>
+          <div class="swap-on">Varejo</div>
+          <div class="swap-off">Atacado</div>
         </label>
         <li class="py-2 font-bold">
           ({item.quantity}x)
@@ -26,7 +26,7 @@
               100
             ).toFixed(2)}
           </span>
-          =
+          {item.item.name} - 
           <span class="text-success">
             R${(
               (item.quantity *
@@ -36,7 +36,6 @@
               100
             ).toFixed(2)}
           </span>
-          {item.item.name}
         </li>
       </div>
       <button

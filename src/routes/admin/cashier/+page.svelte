@@ -47,13 +47,33 @@
     })
   }
 
-  async function handleDeleteCashier(id:number){
+  async function handleDeleteCashier(id: number) {
     try {
       await trpc($page).distribuidora.deleteCashierById.mutate(id)
       toast.success('Caixa deletado com sucesso!')
       window.location.reload()
     } catch (error) {
       toast.error('Erro ao deletar o caixa!')
+    }
+  }
+
+  let editingLink: { [key: number]: boolean } = {};
+
+  function editLink(id: number) {
+    editingLink[id] = !editingLink[id]
+  }
+
+  async function handleEditNameCashier(id: number, data: string) {
+    try {
+      await trpc($page).distribuidora.updateCashier.mutate({
+        id: id,
+        data: {
+          name: data,
+        },
+      })
+      toast.success('Nome editado com sucesso!')
+    } catch (error) {
+      toast.error('Erro ao editar nome')
     }
   }
 </script>
@@ -76,27 +96,55 @@
     </button>
     <div class="flex flex-col gap-2 text-center lg:mx-96">
       {#each cashiers.distribuidoras as caixa}
-      <div class="flex w-full gap-3">
-        <a
-          href="/admin/cashier/{caixa.id}"
-          class="btn btn-primary flex justify-between p-3 w-full"
-        >
-          {caixa.name}
-          <span class="text-end font-bold">
-            Valor no caixa: R${(caixa.currency / 100).toFixed(2)}
-          </span>
-        </a>
-        <button class="btn btn-circle" onclick={()=>{
-          if(confirm('Tem certeza que gostaria de excluir o caixa?') === true) {
-            handleDeleteCashier(caixa.id)
-          } else{
-            toast.info('Ação cancelada!')
-          }
-          
-        }}>
-          {@html icons.trash()}
-        </button>
-      </div>
+        <div class="flex w-full gap-3">
+          {#if !editingLink[caixa.id]}
+            <a
+              href="/admin/cashier/{caixa.id}"
+              class="btn btn-primary flex w-full justify-between p-3"
+            >
+              {caixa.name}
+              <span class="text-end font-bold">
+                Valor no caixa: R${(caixa.currency / 100).toFixed(2)}
+              </span>
+            </a>
+            <button
+            class="btn btn-circle btn-primary"
+            onclick={() => editLink(caixa.id)}
+          >
+              {@html icons.edit()}
+          </button>
+            <button
+              class="btn btn-circle"
+              onclick={() => {
+                if (
+                  confirm('Tem certeza que gostaria de excluir o caixa?') ===
+                  true
+                ) {
+                  handleDeleteCashier(caixa.id)
+                } else {
+                  toast.info('Ação cancelada!')
+                }
+              }}
+            >
+              {@html icons.trash()}
+            </button>
+          {:else}
+            <input
+              type="text"
+              bind:value={caixa.name}
+              class="input input-primary flex w-full justify-between p-3"
+            />
+            <button
+              class="btn btn-circle btn-primary"
+              onclick={() => {
+                editLink(caixa.id)
+                handleEditNameCashier(caixa.id, caixa.name)
+              }}
+            >
+              {@html icons.save()}
+            </button>
+          {/if}
+        </div>
       {/each}
     </div>
   </div>

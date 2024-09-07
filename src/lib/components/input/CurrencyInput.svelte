@@ -1,12 +1,12 @@
 <script lang="ts">
-  export let value: number | undefined = 0
+  export let value: number = 0
 
   if (!value) {
     value = 0
   }
 
   // let amountFormatted = '0.00'
-  let amountFormatted = (value / 100).toFixed(2)
+  $: amountFormatted = (value / 100).toFixed(2)
   let currencyInput: HTMLInputElement
   // $: console.log('amountFormatted: ' + amountFormatted)
 

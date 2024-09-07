@@ -8,6 +8,7 @@ import {
   customerTable,
   paymentMethodEnum,
   paymentStatusEnum,
+  insertOrderPaymentSchema,
 } from '$lib/server/db/schema'
 
 import { paramsSchema } from '$lib/components/table'
@@ -37,7 +38,7 @@ export const customer = router({
           max_credit: z.number().optional(),
           used_credit: z.number().optional(),
           email: z.string().email().optional(),
-          is_retail:z.boolean().optional()
+          is_retail: z.boolean().optional(),
         }),
       }),
     )
@@ -162,6 +163,13 @@ export const customer = router({
         order_id,
         payment_status,
       )
+    }),
+
+  insertOrderPayment: publicProcedure
+    .use(middleware.logged)
+    .input(insertOrderPaymentSchema)
+    .mutation(async ({ input }) => {
+      return await customerController.insertOrderPayment(input).returning()
     }),
 
   //TODO: updateOrderPaymentStatus

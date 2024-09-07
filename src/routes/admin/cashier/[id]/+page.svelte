@@ -38,7 +38,9 @@
 
   let enderecoCliente: RouterOutputs['customer']['getCustomers'][0]['adresses'][0] | null = null
 
+  let filteredProducts = products
 
+  $:console.log(filteredProducts)
 
   //TODO:TIPAGEM DA VARIAVEL metodo_pagamento - status_pagamento
   async function createOrder(metodo_pagamento: any,status_pagamento:any,isChecked:boolean,amount_paid:number) {
@@ -292,10 +294,10 @@ onDestroy(() =>  {
         ></textarea>
       </div>
       <div class="flex flex-col gap-2 ">
-           <button class="btn btn-primary w-full disabled:bg-opacity-50">
-             <span class="mr-1">IMPRIMIR</span>
-             {@html icons.print()}
-           </button>
+          <button class="btn btn-primary w-full disabled:bg-opacity-50">
+            <span class="mr-1">IMPRIMIR</span>
+            {@html icons.print()}
+          </button>
         <button
           class="btn btn-primary w-full disabled:bg-opacity-50"
           on:click={pagamentoModal}
@@ -313,80 +315,97 @@ onDestroy(() =>  {
 
 <dialog class="modal" bind:this={isOpenModal}>
   <div class="modal-box max-w-4xl">
-    <Cardapio data={products}>
-      {#snippet card(p)}
-        <div class="card w-full p-1">
-          <div class="grid grid-cols-1 gap-3">
-            {#each p.items as item}
-              {@const cartItem = $cart[item.id]}
+    <Cardapio data={filteredProducts} onFilterChange={(value)=> {
+        filteredProducts = products
+          .map((product) => {
+            const filteredSubProducts = product.products.map((subProduct) => {
+              const filteredItems = subProduct.items.filter((item) =>
+                item.name.toLowerCase().includes(value)
+              );
+              return { ...subProduct, items: filteredItems };
+            });
 
-              <hr />
-              <div class="flex w-full py-2">
-                <div class=" flex-none md:w-auto hidden md:block">
-                  <img
-                    alt="imagem"
-                    src={getImagePath(item.image)}
-                    class="h-16 w-16 rounded-lg object-cover md:h-20 md:w-20"
-                  />
-                </div>
-                <div class="ml-4 w-full">
-                  <h2 class="md:text-xl font-bold">{item.name}</h2>
-                  <h3 class="md:text-md text-secondary">{p.description}</h3>
-                </div>
-                <div class="w-full text-right">
-                  <span class="block pb-3 text-xl font-bold">
-                    R${(item[tipo_preco]/100).toFixed(2)}
-                  </span>
-                  <div class="flex items-center justify-end gap-3 text-center">
-                    {#if cartItem?.quantity >= 1}
-                      <button
-                        class="btn btn-primary hidden md:block"
-                        on:click={()=> {
-                          if(cartItem.quantity <=  1){
-                            cart.removeItem(item.id)
-                          } else {
-                            cart.addItem({
-                              item: item,
-                              quantity: -1,
-                              is_retail: tipo_preco=='retail_price'? false : true
-                            })
-                          }
-                        }}>
-                        {@html icons.minus()}
-                      </button>
-                    {/if}
-                    <input
-                      min="1"
-                      class="md:min-w-10 md:max-w-28 max-w-16  bg-base-100 text-right text-xl font-bold focus:border-yellow-500"
-                      value={$cart[item.id]?.quantity ?? 0}
-                      on:change={e => {
-                        const quant_temp = (e.target as HTMLInputElement)?.value
-                        cart.setItem({
-                          item: item,
-                          quantity: Number(quant_temp),
-                          is_retail: tipo_preco=='retail_price'? false: true
-                        })
-                      }}
+            return { ...product, products: filteredSubProducts };
+          })
+          .filter((product) =>
+            product.products.some((subProduct) => subProduct.items.length > 0)
+          );
+
+        }}>
+      {#snippet card(p)}
+          <div class="card w-full p-1">
+            <div class="grid grid-cols-1 gap-3">
+              {#each p.items as item}
+                {@const cartItem = $cart[item.id]}
+  
+                <hr />
+                <div class="flex w-full py-2">
+                  <div class=" flex-none md:w-auto hidden md:block">
+                    <img
+                      alt="imagem"
+                      src={getImagePath(item.image)}
+                      class="h-16 w-16 rounded-lg object-cover md:h-20 md:w-20"
                     />
-                    <button
-                      on:click={() =>
-                        cart.addItem({
-                          item: item,
-                          quantity: 1,
-                          is_retail: tipo_preco=='retail_price'? false: true
-                        })}
-                      class="btn btn-primary"
-                    >
-                      {@html icons.plus()}
-                    </button>
+                  </div>
+                  <div class="ml-4 w-full">
+                    <h2 class="md:text-xl font-bold">{item.name}</h2>
+                    <h3 class="md:text-md text-secondary">{p.description}</h3>
+                  </div>
+                  <div class="w-full text-right">
+                    <span class="block pb-3 text-xl font-bold">
+                      R${(item[tipo_preco]/100).toFixed(2)}
+                    </span>
+                    <div class="flex items-center justify-end gap-3 text-center">
+                      {#if cartItem?.quantity >= 1}
+                        <button
+                          class="btn btn-primary hidden md:block"
+                          on:click={()=> {
+                            if(cartItem.quantity <=  1){
+                              cart.removeItem(item.id)
+                            } else {
+                              cart.addItem({
+                                item: item,
+                                quantity: -1,
+                                is_retail: tipo_preco=='retail_price'? true : false
+                              })
+                            }
+                          }}>
+                          {@html icons.minus()}
+                        </button>
+                      {/if}
+                      <input
+                        min="1"
+                        class="md:min-w-10 md:max-w-28 max-w-16  bg-base-100 text-right text-xl font-bold focus:border-yellow-500"
+                        value={$cart[item.id]?.quantity ?? 0}
+                        on:change={e => {
+                          const quant_temp = (e.target as HTMLInputElement)?.value
+                          cart.setItem({
+                            item: item,
+                            quantity: Number(quant_temp),
+                            is_retail: tipo_preco=='retail_price'? true: false
+                          })
+                        }}
+                      />
+                      <button
+                        on:click={() =>
+                          cart.addItem({
+                            item: item,
+                            quantity: 1,
+                            is_retail: tipo_preco=='retail_price'? true: false
+                          })}
+                        class="btn btn-primary"
+                      >
+                        {@html icons.plus()}
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            {/each}
+              {/each}
+            </div>
           </div>
-        </div>
       {/snippet}
     </Cardapio>
+  
   </div>
   <form method="dialog" class="modal-backdrop">
     <button>close</button>
