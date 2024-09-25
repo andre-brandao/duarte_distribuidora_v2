@@ -6,9 +6,9 @@ import { product, user, distribuidora, customer, stock } from './controller'
 
 const main = async () => {
   await seedUsers()
-  await seedCategories()
-  await seedProducts()
-  await seedCustomers()
+  // await seedCategories()
+  // await seedProducts()
+  // await seedCustomers()
 
   // await seedOrders()
 }
@@ -23,8 +23,8 @@ async function seedUsers() {
       username: 'administrator',
       email: 'admin@admin.com',
       permissions: {
-        role: 'admin',
       },
+      role:'admin',
       password_hash: await hash('senha123', {
         memoryCost: 19456,
         timeCost: 2,
@@ -36,26 +36,26 @@ async function seedUsers() {
     console.error('Failed to insert administrator:', error)
   }
 
-  for (let i = 0; i < 20; i++) {
-    try {
-      await user.insertUser({
-        id: generateId(15),
-        username: faker.internet.userName(),
-        email: faker.internet.email(),
-        permissions: {
-          role: 'user',
-        },
-        password_hash: await hash('password', {
-          memoryCost: 19456,
-          timeCost: 2,
-          outputLen: 32,
-          parallelism: 1,
-        }),
-      })
-    } catch (error) {
-      console.error(`Failed to insert user ${i}:`, error)
-    }
-  }
+  // for (let i = 0; i < 20; i++) {
+  //   try {
+  //     await user.insertUser({
+  //       id: generateId(15),
+  //       username: faker.internet.userName(),
+  //       email: faker.internet.email(),
+  //       permissions: {
+  //         role: 'user',
+  //       },
+  //       password_hash: await hash('password', {
+  //         memoryCost: 19456,
+  //         timeCost: 2,
+  //         outputLen: 32,
+  //         parallelism: 1,
+  //       }),
+  //     })
+  //   } catch (error) {
+  //     console.error(`Failed to insert user ${i}:`, error)
+  //   }
+  // }
 
   console.log('userTable seed END')
 }
