@@ -60,7 +60,7 @@
             {
               name: 'Ver detalhes',
               fn: () => {
-                goto(`/admin/orders/${info.row.original[0].id}`)
+                goto(`/admin/orders/${info.row.original.id}`)
               },
             },
           ],
