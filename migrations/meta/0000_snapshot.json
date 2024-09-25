@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "074f65af-2653-493f-931c-1954e007c09f",
+  "id": "62eac68c-8ca9-44a4-80ca-60dc77a3f1e8",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "magic_link": {
@@ -161,6 +161,14 @@
           "autoincrement": false,
           "default": "(CURRENT_TIMESTAMP)"
         },
+        "is_active": {
+          "name": "is_active",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": true
+        },
         "username": {
           "name": "username",
           "type": "text",
@@ -190,13 +198,21 @@
           "notNull": true,
           "autoincrement": false
         },
+        "role": {
+          "name": "role",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'customer'"
+        },
         "permissions": {
           "name": "permissions",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'{\"role\":\"user\"}'"
+          "default": "'{}'"
         }
       },
       "indexes": {
@@ -458,10 +474,10 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "product_item_sku_sku_sku_fk": {
-          "name": "product_item_sku_sku_sku_fk",
+        "product_item_sku_estoque_sku_fk": {
+          "name": "product_item_sku_estoque_sku_fk",
           "tableFrom": "product_item",
-          "tableTo": "sku",
+          "tableTo": "estoque",
           "columnsFrom": [
             "sku"
           ],
@@ -708,8 +724,8 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
-    "sku": {
-      "name": "sku",
+    "estoque": {
+      "name": "estoque",
       "columns": {
         "sku": {
           "name": "sku",
@@ -758,9 +774,9 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "sku_image_id_image_id_fk": {
-          "name": "sku_image_id_image_id_fk",
-          "tableFrom": "sku",
+        "estoque_image_id_image_id_fk": {
+          "name": "estoque_image_id_image_id_fk",
+          "tableFrom": "estoque",
           "tableTo": "image",
           "columnsFrom": [
             "image_id"
@@ -775,8 +791,8 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
-    "stock_transaction": {
-      "name": "stock_transaction",
+    "transacao_estoque": {
+      "name": "transacao_estoque",
       "columns": {
         "id": {
           "name": "id",
@@ -859,10 +875,10 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "stock_transaction_sku_sku_sku_fk": {
-          "name": "stock_transaction_sku_sku_sku_fk",
-          "tableFrom": "stock_transaction",
-          "tableTo": "sku",
+        "transacao_estoque_sku_estoque_sku_fk": {
+          "name": "transacao_estoque_sku_estoque_sku_fk",
+          "tableFrom": "transacao_estoque",
+          "tableTo": "estoque",
           "columnsFrom": [
             "sku"
           ],
@@ -872,10 +888,10 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "stock_transaction_supplier_id_supplier_id_fk": {
-          "name": "stock_transaction_supplier_id_supplier_id_fk",
-          "tableFrom": "stock_transaction",
-          "tableTo": "supplier",
+        "transacao_estoque_supplier_id_fornecedor_id_fk": {
+          "name": "transacao_estoque_supplier_id_fornecedor_id_fk",
+          "tableFrom": "transacao_estoque",
+          "tableTo": "fornecedor",
           "columnsFrom": [
             "supplier_id"
           ],
@@ -885,10 +901,10 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "stock_transaction_order_id_customer_order_id_fk": {
-          "name": "stock_transaction_order_id_customer_order_id_fk",
-          "tableFrom": "stock_transaction",
-          "tableTo": "customer_order",
+        "transacao_estoque_order_id_pedidos_id_fk": {
+          "name": "transacao_estoque_order_id_pedidos_id_fk",
+          "tableFrom": "transacao_estoque",
+          "tableTo": "pedidos",
           "columnsFrom": [
             "order_id"
           ],
@@ -902,8 +918,8 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
-    "supplier": {
-      "name": "supplier",
+    "fornecedor": {
+      "name": "fornecedor",
       "columns": {
         "id": {
           "name": "id",
@@ -1196,8 +1212,8 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
-    "address": {
-      "name": "address",
+    "endereco": {
+      "name": "endereco",
       "columns": {
         "id": {
           "name": "id",
@@ -1287,10 +1303,10 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "address_customer_id_customer_id_fk": {
-          "name": "address_customer_id_customer_id_fk",
-          "tableFrom": "address",
-          "tableTo": "customer",
+        "endereco_customer_id_cliente_id_fk": {
+          "name": "endereco_customer_id_cliente_id_fk",
+          "tableFrom": "endereco",
+          "tableTo": "cliente",
           "columnsFrom": [
             "customer_id"
           ],
@@ -1304,8 +1320,8 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
-    "customer_order": {
-      "name": "customer_order",
+    "pedidos": {
+      "name": "pedidos",
       "columns": {
         "id": {
           "name": "id",
@@ -1329,6 +1345,13 @@
           "notNull": false,
           "autoincrement": false
         },
+        "is_fiado": {
+          "name": "is_fiado",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
         "customer_id": {
           "name": "customer_id",
           "type": "integer",
@@ -1350,26 +1373,25 @@
           "notNull": false,
           "autoincrement": false
         },
-        "payment_method": {
-          "name": "payment_method",
+        "motoboy_id": {
+          "name": "motoboy_id",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
-        },
-        "payment_status": {
-          "name": "payment_status",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "'PENDING'"
         },
         "observation": {
           "name": "observation",
           "type": "text",
           "primaryKey": false,
           "notNull": false,
+          "autoincrement": false
+        },
+        "amount_paid": {
+          "name": "amount_paid",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
           "autoincrement": false
         },
         "total": {
@@ -1385,14 +1407,30 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
+        },
+        "type": {
+          "name": "type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "paid_index": {
+          "name": "paid_index",
+          "columns": [
+            "amount_paid"
+          ],
+          "isUnique": false,
+          "where": "\"pedidos\".\"amount_paid\" >= \"pedidos\".\"total\""
+        }
+      },
       "foreignKeys": {
-        "customer_order_customer_id_customer_id_fk": {
-          "name": "customer_order_customer_id_customer_id_fk",
-          "tableFrom": "customer_order",
-          "tableTo": "customer",
+        "pedidos_customer_id_cliente_id_fk": {
+          "name": "pedidos_customer_id_cliente_id_fk",
+          "tableFrom": "pedidos",
+          "tableTo": "cliente",
           "columnsFrom": [
             "customer_id"
           ],
@@ -1402,10 +1440,10 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "customer_order_address_id_address_id_fk": {
-          "name": "customer_order_address_id_address_id_fk",
-          "tableFrom": "customer_order",
-          "tableTo": "address",
+        "pedidos_address_id_endereco_id_fk": {
+          "name": "pedidos_address_id_endereco_id_fk",
+          "tableFrom": "pedidos",
+          "tableTo": "endereco",
           "columnsFrom": [
             "address_id"
           ],
@@ -1415,12 +1453,25 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "customer_order_cachier_id_cashier_id_fk": {
-          "name": "customer_order_cachier_id_cashier_id_fk",
-          "tableFrom": "customer_order",
-          "tableTo": "cashier",
+        "pedidos_cachier_id_caixas_id_fk": {
+          "name": "pedidos_cachier_id_caixas_id_fk",
+          "tableFrom": "pedidos",
+          "tableTo": "caixas",
           "columnsFrom": [
             "cachier_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "pedidos_motoboy_id_user_id_fk": {
+          "name": "pedidos_motoboy_id_user_id_fk",
+          "tableFrom": "pedidos",
+          "tableTo": "user",
+          "columnsFrom": [
+            "motoboy_id"
           ],
           "columnsTo": [
             "id"
@@ -1432,8 +1483,8 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
-    "customer": {
-      "name": "customer",
+    "cliente": {
+      "name": "cliente",
       "columns": {
         "id": {
           "name": "id",
@@ -1520,19 +1571,11 @@
           "notNull": true,
           "autoincrement": false,
           "default": 50000
-        },
-        "used_credit": {
-          "name": "used_credit",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": 0
         }
       },
       "indexes": {
-        "customer_email_unique": {
-          "name": "customer_email_unique",
+        "cliente_email_unique": {
+          "name": "cliente_email_unique",
           "columns": [
             "email"
           ],
@@ -1543,8 +1586,8 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
-    "order_item": {
-      "name": "order_item",
+    "item_pedido": {
+      "name": "item_pedido",
       "columns": {
         "id": {
           "name": "id",
@@ -1599,10 +1642,10 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "order_item_order_id_customer_order_id_fk": {
-          "name": "order_item_order_id_customer_order_id_fk",
-          "tableFrom": "order_item",
-          "tableTo": "customer_order",
+        "item_pedido_order_id_pedidos_id_fk": {
+          "name": "item_pedido_order_id_pedidos_id_fk",
+          "tableFrom": "item_pedido",
+          "tableTo": "pedidos",
           "columnsFrom": [
             "order_id"
           ],
@@ -1612,9 +1655,9 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "order_item_product_id_product_item_id_fk": {
-          "name": "order_item_product_id_product_item_id_fk",
-          "tableFrom": "order_item",
+        "item_pedido_product_id_product_item_id_fk": {
+          "name": "item_pedido_product_id_product_item_id_fk",
+          "tableFrom": "item_pedido",
           "tableTo": "product_item",
           "columnsFrom": [
             "product_id"
@@ -1629,8 +1672,100 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
-    "cashier": {
-      "name": "cashier",
+    "pagamentos": {
+      "name": "pagamentos",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "amount_paid": {
+          "name": "amount_paid",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "troco": {
+          "name": "troco",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "payment_method": {
+          "name": "payment_method",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "order_id": {
+          "name": "order_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "observation": {
+          "name": "observation",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "cachier_id": {
+          "name": "cachier_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "pagamentos_order_id_pedidos_id_fk": {
+          "name": "pagamentos_order_id_pedidos_id_fk",
+          "tableFrom": "pagamentos",
+          "tableTo": "pedidos",
+          "columnsFrom": [
+            "order_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "pagamentos_cachier_id_caixas_id_fk": {
+          "name": "pagamentos_cachier_id_caixas_id_fk",
+          "tableFrom": "pagamentos",
+          "tableTo": "caixas",
+          "columnsFrom": [
+            "cachier_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "caixas": {
+      "name": "caixas",
       "columns": {
         "id": {
           "name": "id",
@@ -1683,8 +1818,8 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
-    "cashier_transaction": {
-      "name": "cashier_transaction",
+    "transacao_caixa_dinheiro": {
+      "name": "transacao_caixa_dinheiro",
       "columns": {
         "id": {
           "name": "id",
@@ -1737,6 +1872,13 @@
           "notNull": true,
           "autoincrement": false
         },
+        "order_id": {
+          "name": "order_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
         "meta_data": {
           "name": "meta_data",
           "type": "text",
@@ -1747,12 +1889,25 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "cashier_transaction_cashier_id_cashier_id_fk": {
-          "name": "cashier_transaction_cashier_id_cashier_id_fk",
-          "tableFrom": "cashier_transaction",
-          "tableTo": "cashier",
+        "transacao_caixa_dinheiro_cashier_id_caixas_id_fk": {
+          "name": "transacao_caixa_dinheiro_cashier_id_caixas_id_fk",
+          "tableFrom": "transacao_caixa_dinheiro",
+          "tableTo": "caixas",
           "columnsFrom": [
             "cashier_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "transacao_caixa_dinheiro_order_id_pedidos_id_fk": {
+          "name": "transacao_caixa_dinheiro_order_id_pedidos_id_fk",
+          "tableFrom": "transacao_caixa_dinheiro",
+          "tableTo": "pedidos",
+          "columnsFrom": [
+            "order_id"
           ],
           "columnsTo": [
             "id"

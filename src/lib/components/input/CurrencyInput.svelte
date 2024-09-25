@@ -5,7 +5,8 @@
     value = 0
   }
 
-  // let amountFormatted = '0.00'
+  let amountFormatted = '0.00'
+
   $: amountFormatted = (value / 100).toFixed(2)
   let currencyInput: HTMLInputElement
   // $: console.log('amountFormatted: ' + amountFormatted)
@@ -23,7 +24,7 @@
       amountFormatted = '0.00' // ERROR this never works
     } else {
       value = parseInt(cleanedInput, 10) // Assign the raw value
-      amountFormatted = (value / 100).toFixed(2)
+      amountFormatted = (value / 100).toFixed(2);
     }
     value = Number(amountFormatted.replace('.', ''))
   }

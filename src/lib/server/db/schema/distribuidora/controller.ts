@@ -4,6 +4,7 @@ import {
   cashierTable,
   cashierTransactionTable,
   stockTransactionTable,
+  userTable,
 } from '$db/schema'
 
 import type {
@@ -64,5 +65,9 @@ export const distribuidora = {
   insertCashierTransaction,
   getCashierTransactions,
   updateCashier,
-  deleteCashierById
+  deleteCashierById,
+  getMotoboys: ()=> {
+    return db.select().from(userTable).where(eq(userTable.role, 'motoboy'))
+  }
+
 }

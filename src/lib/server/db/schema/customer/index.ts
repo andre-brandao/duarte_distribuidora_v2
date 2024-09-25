@@ -3,9 +3,10 @@ import {
   sqliteTable,
   text,
   integer,
+  index,
   // customType,
 } from 'drizzle-orm/sqlite-core'
-import { sql, relations } from 'drizzle-orm'
+import { sql, relations, gt, gte } from 'drizzle-orm'
 
 import {
   userTable,
@@ -17,7 +18,7 @@ import { createInsertSchema } from 'drizzle-zod'
 
 import { product } from '$db/controller'
 
-export const customerTable = sqliteTable('customer', {
+export const customerTable = sqliteTable('cliente', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   // .$defaultFn(() => generateId(15)),
   is_retail: integer('is_retail', { mode: 'boolean' }).notNull(),
@@ -33,7 +34,6 @@ export const customerTable = sqliteTable('customer', {
   cpf_cnpj: text('cpf_cnpj'),
   rg_ie: text('rg_ie'),
   max_credit: integer('max_credit').notNull().default(50000),
-  used_credit: integer('used_credit').notNull().default(0),
 })
 export const customerRelations = relations(customerTable, ({ one, many }) => ({
   adresses: many(addressTable),
@@ -54,12 +54,11 @@ export const updateCustomerSchema = insertCustomerSchema.pick({
   phone: true,
   is_retail: true,
   max_credit: true,
-  used_credit: true,
 })
 export type SelectCustomer = typeof customerTable.$inferSelect
 export type InsertCustomer = typeof customerTable.$inferInsert
 
-export const addressTable = sqliteTable('address', {
+export const addressTable = sqliteTable('endereco', {
   id: integer('id').notNull().primaryKey({ autoIncrement: true }),
   // .$defaultFn(() => generateId(15)),
   created_at: text('created_at').default(sql`(CURRENT_TIMESTAMP)`),
@@ -94,7 +93,6 @@ export const paymentMethodEnum = [
   'credit_card',
   'debit_card',
   'pix',
-  'fiado',
   'dinheiro',
 ] as const
 
@@ -115,27 +113,43 @@ export const orderStatusEnum = [
   'ENDED',
 ] as const
 
-export const customerOrderTable = sqliteTable('customer_order', {
-  id: integer('id').notNull().primaryKey({ autoIncrement: true }),
-  // .$defaultFn(() => generateId(15)),
-  created_at: text('created_at').default(sql`(CURRENT_TIMESTAMP)`),
-  updated_at: integer('updated_at', { mode: 'timestamp' }).$onUpdate(
-    () => new Date(),
-  ),
-  customer_id: integer('customer_id').references(() => customerTable.id),
-  address_id: integer('address_id').references(() => addressTable.id),
-  cachier_id: integer('cachier_id').references(() => cashierTable.id),
-  payment_status: text('payment_status', {
-    enum: paymentStatusEnum,
-  })
-    .notNull()
-    .default('PENDING'),
-  observation: text('observation'),
-  total: integer('total').notNull(),
-  status: text('status', {
-    enum: orderStatusEnum,
-  }).notNull(),
-})
+export const orderTypeEnum = [
+  'DELIVERY',
+  'NO LOCAL',
+  'RETIRAR',
+  'ATACADO',
+] as const
+export const customerOrderTable = sqliteTable(
+  'pedidos',
+  {
+    id: integer('id').notNull().primaryKey({ autoIncrement: true }),
+    // .$defaultFn(() => generateId(15)),
+    created_at: text('created_at').default(sql`(CURRENT_TIMESTAMP)`),
+    updated_at: integer('updated_at', { mode: 'timestamp' }).$onUpdate(
+      () => new Date(),
+    ),
+    is_fiado: integer('is_fiado', { mode: 'boolean' }).notNull(),
+
+    customer_id: integer('customer_id').references(() => customerTable.id),
+    address_id: integer('address_id').references(() => addressTable.id),
+    cachier_id: integer('cachier_id').references(() => cashierTable.id),
+    motoboy_id: text('motoboy_id').references(() => userTable.id),
+    observation: text('observation'),
+    amount_paid: integer('amount_paid').notNull(),
+    total: integer('total').notNull(),
+    status: text('status', {
+      enum: orderStatusEnum,
+    }).notNull(),
+    type: text('type', {
+      enum: orderTypeEnum,
+    }).notNull(),
+  },
+  t => ({
+    paid: index('paid_index')
+      .on(t.amount_paid)
+      .where(gte(t.amount_paid, t.total)),
+  }),
+)
 
 export const customerOrderRelations = relations(
   customerOrderTable,
@@ -151,13 +165,13 @@ export const customerOrderRelations = relations(
     items: many(orderItemTable),
     transactions: many(stockTransactionTable),
 
-    payments: many(orderPaymentTable)
+    payments: many(orderPaymentTable),
   }),
 )
 export type SelectCustomerOrder = typeof customerOrderTable.$inferSelect
 export type InsertCustomerOrder = typeof customerOrderTable.$inferInsert
 
-export const orderItemTable = sqliteTable('order_item', {
+export const orderItemTable = sqliteTable('item_pedido', {
   id: integer('id').notNull().primaryKey({ autoIncrement: true }),
   created_at: text('created_at').default(sql`(CURRENT_TIMESTAMP)`),
   updated_at: integer('updated_at', { mode: 'timestamp' }).$onUpdate(
@@ -190,23 +204,28 @@ export const orderItemRelations = relations(
 export type SelectOrderItem = typeof orderItemTable.$inferSelect
 export type InsertOrderItem = typeof orderItemTable.$inferInsert
 
-export const orderPaymentTable = sqliteTable('order_payment', {
+export const orderPaymentTable = sqliteTable('pagamentos', {
   id: integer('id').primaryKey({ autoIncrement: true }).notNull(),
   amount_paid: integer('amount_paid').notNull(),
+  troco: integer('troco'),
   payment_method: text('payment_method', { enum: paymentMethodEnum }).notNull(),
   order_id: integer('order_id')
     .references(() => customerOrderTable.id)
     .notNull(),
+  status: text('status', { enum: paymentStatusEnum }).notNull(),
+  observation: text('observation'),
+
+  cachier_id: integer('cachier_id').references(() => cashierTable.id),
 })
 
 export const orderPaymentRelations = relations(
   orderPaymentTable,
-  ({one}) => ({
+  ({ one }) => ({
     order: one(customerOrderTable, {
       references: [customerOrderTable.id],
-      fields:[orderPaymentTable.order_id]
-    })
-  })
+      fields: [orderPaymentTable.order_id],
+    }),
+  }),
 )
 
 export type SelectOrderPayment = typeof orderPaymentTable.$inferSelect

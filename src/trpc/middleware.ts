@@ -2,7 +2,7 @@ import { t } from '$trpc/t'
 import { TRPCError } from '@trpc/server'
 import { bugReport } from '$lib/server/db/controller'
 import type { UserPermissions } from '$lib/server/db/schema'
-import { allowPermissionsCheck } from '$db/schema'
+// import { allowPermissionsCheck } from '$db/schema'
 const admin = t.middleware(async ({ next, ctx }) => {
   const { user } = ctx.locals
   if (user?.permissions.role !== 'admin')
@@ -58,30 +58,30 @@ const logged = t.middleware(async ({ next, path, type, ctx, input }) => {
   return result
 })
 
-const allowPermissions = (permissions: UserPermissions['role'][]) => {
-  return t.middleware(async ({ next, ctx }) => {
-    const { user } = ctx.locals
+// const allowPermissions = (permissions: UserPermissions['role'][]) => {
+//   return t.middleware(async ({ next, ctx }) => {
+//     const { user } = ctx.locals
 
-    if (!user) {
-      throw new TRPCError({
-        code: 'UNAUTHORIZED',
-        message: 'You must be logged in to access this ',
-      })
-    }
+//     if (!user) {
+//       throw new TRPCError({
+//         code: 'UNAUTHORIZED',
+//         message: 'You must be logged in to access this ',
+//       })
+//     }
 
-    if (allowPermissionsCheck(user, permissions)) {
-      throw new TRPCError({
-        code: 'UNAUTHORIZED',
-        message: 'You do not have permission to access this ',
-      })
-    }
-    return next()
-  })
-}
+//     if (allowPermissionsCheck(user, permissions)) {
+//       throw new TRPCError({
+//         code: 'UNAUTHORIZED',
+//         message: 'You do not have permission to access this ',
+//       })
+//     }
+//     return next()
+//   })
+// }
 
 export const middleware = {
   admin,
   auth,
   logged,
-  allowPermissions,
+  // allowPermissions,
 }

@@ -1,4 +1,4 @@
-<!-- <script lang="ts">
+<script lang="ts">
   import type { PageData } from './$types'
   import { toast } from 'svelte-sonner'
 
@@ -6,8 +6,6 @@
 
   import { page } from '$app/stores'
   import { trpc } from '$trpc/client'
-  import { tokenizeCard } from '$lib/utils/pagarme'
-  let test: any
   let loading = false
 
   // const loadData = async () => {
@@ -16,107 +14,43 @@
   //   loading = false
   // }
 
-  let eror: unknown
-  const pagarmeTest = async () => {
-    loading = true
-    const address = {
-      line_1: '7221, Avenida Dra Ruth Cardoso, Pinheiros',
-      line_2: '',
-      zip_code: '05425070',
-      city: 'São Paulo',
-      state: 'SP',
-      country: 'BR',
-    }
-
-    const { data: tokenCard, error } = await tokenizeCard({
-      number: '4000000000000010',
-      holder_name: 'Tony Stark',
-      exp_month: 1,
-      exp_year: 30,
-      cvv: '531',
-    })
-    console.log(tokenCard)
-
-    if (error || !tokenCard?.id) {
-      console.log(tokenCard, error)
-      toast.error('Erro ao gerar token do cartão')
-      return
-    }
-
-    const payload = {
-      closed: true,
-      customer: {
-        name: 'Tony Stark',
-        document: '03154435026',
-        type: 'individual',
-        email: 'avengerstark@ligadajustica.com.br',
-        phones: {
-          home_phone: {
-            country_code: '55',
-            area_code: '11',
-            number: '000000000',
-          },
-          mobile_phone: {
-            country_code: '55',
-            area_code: '11',
-            number: '000000000',
-          },
-        },
-        address,
-      },
-      items: [
-        {
-          amount: 2990,
-          description: 'Chaveiro do Tesseract',
-          quantity: 1,
-          code: 123,
-        },
-      ],
-      payments: [
-        {
-          payment_method: 'credit_card',
-          credit_card: {
-            operation_type: 'auth_and_capture',
-            installments: 1,
-            statement_descriptor: 'AVENGERS', //Máximo de 13 caracteres
-            card_token: tokenCard.id,
-            card: {
-              billing_address: address,
-            },
-          },
-        },
-      ],
-    }
-
+  async function testFiado() {
     try {
-      const { data: result, error } =
-        await trpc($page).pagarme.cardToken.query(payload)
-      console.log(result)
+      const resp = await trpc($page).customer.order.insertFiado.mutate({
+        order_info: {
+          customer_id: 1,
+          observation: 'teste',
+          total: 2000,
+          cachier_id: 1,
+          address_id: 1,
+        },
 
-      test = result
-      eror = error
-      loading = false
-    } catch (error) {
-      console.log(error)
-      eror = error
-      loading = false
+        order_items: [
+          {
+            product_id: 1,
+            quantity: 2,
+            price: 1000,
+          },
+        ],
+      })
+      console.log(resp)
+      toast.success('Fiado testado com sucesso')
+      toast.success(JSON.stringify(resp, null, 2))
+    } catch (error: any) {
+      toast.error(error.message)
     }
-    console.log(test)
-    loading = false
   }
 </script>
 
 <pre>
-  {JSON.stringify(test, null, 2)}
-</pre>
-
-<pre>
-  {JSON.stringify(eror, null, 2)}
+  {JSON.stringify(data, null, 2)}
 </pre>
 <div>
   {#if loading}
     Loading...
   {:else}
-    <button class="btn" disabled={loading} on:click={pagarmeTest}>Test</button>
+    <button class="btn" disabled={loading} on:click={testFiado}>
+      Test Fiado
+    </button>
   {/if}
-</div> -->
+</div>

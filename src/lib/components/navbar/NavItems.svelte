@@ -107,6 +107,10 @@
           icon: icons.cart(),
         },
         {
+          name: 'Todos pedidos',
+          href: '/admin/orders/allorders',
+        },
+        {
           name: 'Financeiro',
           href: '/admin/finance',
         },

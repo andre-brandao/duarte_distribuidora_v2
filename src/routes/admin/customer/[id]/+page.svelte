@@ -74,11 +74,12 @@
     }
   }
 
+
   async function handleDeleteCustomer(id: number) {
     try {
       await trpc($page).customer.deleteCustomer.mutate(id)
       toast.success('Cliente deletado com sucesso!')
-      window.location.href = "./";
+      window.location.href = './'
     } catch (error: any) {
       toast.error(error.message)
     }
@@ -87,8 +88,8 @@
 
 <!-- <pre>
   {JSON.stringify(data.customer, null, 2)}
-</pre>
-<pre>
+</pre> -->
+<!-- <pre>
   {JSON.stringify(data.orders, null, 2)}
 </pre> -->
 
@@ -250,9 +251,12 @@
   </div>
 
   {#if orders.length > 0}
+  <div class="card mb-10 p-8 shadow-lg">
+    <h2 class="mb-6 text-3xl font-bold">Pedidos de {customer.name}</h2>
     {#each orders as order}
-      <CardShowPedidos {order} />
+        <CardShowPedidos {order} {customer} columns={4} />
     {/each}
+    </div>
   {:else}
     <h1 class="my-2 text-center text-xl">
       Este cliente não possui nenhum pedido...

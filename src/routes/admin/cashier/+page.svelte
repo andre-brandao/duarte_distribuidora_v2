@@ -24,13 +24,13 @@
           type: 'text',
           required: true,
         },
-        {
-          label: 'Quantidade em Caixa',
-          name: 'currency',
-          type: 'currency',
-          required: true,
-          value: 0,
-        },
+        // {
+        //   label: 'Quantidade em Caixa',
+        //   name: 'currency',
+        //   type: 'currency',
+        //   required: false,
+        //   value: 0,
+        // },
       ],
       save: async toSave => {
         try {

@@ -20,7 +20,7 @@ import {
   userTable,
 } from '$db/schema'
 
-export const skuTable = sqliteTable('sku', {
+export const skuTable = sqliteTable('estoque', {
   sku: text('sku').primaryKey(),
   created_at: integer('created_at', { mode: 'timestamp' }).$defaultFn(
     () => new Date(),
@@ -61,7 +61,7 @@ export type MetaUnion = metaEntrada | metaSaida
 // function isMetaSaida(meta: MetaUnion): meta is metaSaida {
 //   return meta.type === 'saida'
 // }
-export const stockTransactionTable = sqliteTable('stock_transaction', {
+export const stockTransactionTable = sqliteTable('transacao_estoque', {
   id: integer('id', { mode: 'number' }).primaryKey({ autoIncrement: true }),
   created_at: integer('created_at', { mode: 'timestamp' }).default(
     sql`(CURRENT_TIMESTAMP)`,
@@ -103,7 +103,7 @@ export const stockTransactionRelations = relations(
 export type InsertStockTransaction = typeof stockTransactionTable.$inferInsert
 export type SelectStockTransaction = typeof stockTransactionTable.$inferSelect
 
-export const supplierTable = sqliteTable('supplier', {
+export const supplierTable = sqliteTable('fornecedor', {
   id: integer('id', { mode: 'number' }).primaryKey({ autoIncrement: true }),
   name: text('name').notNull(),
   created_at: integer('created_at', { mode: 'timestamp' }).default(

@@ -12,7 +12,7 @@ export const userTable = sqliteTable('user', {
   // .$defaultFn(() => generateId(15)),
 
   created_at: text('created_at').default(sql`(CURRENT_TIMESTAMP)`),
-
+  is_active: integer('is_active', { mode: 'boolean' }).notNull().default(true),
   username: text('username').notNull().unique(),
   email: text('email').notNull().unique(),
   emailVerified: integer('email_verified', { mode: 'boolean' })
@@ -20,10 +20,13 @@ export const userTable = sqliteTable('user', {
     .default(false),
   password_hash: text('password_hash').notNull(),
 
+  role: text('role', { enum: ['admin', 'employee', 'customer', 'motoboy'] })
+    .notNull()
+    .default('customer'),
   permissions: text('permissions', { mode: 'json' })
     .notNull()
     .$type<UserPermissions>()
-    .default({ role: 'user' }),
+    .default({}),
 })
 
 export type SelectUser = typeof userTable.$inferSelect
@@ -38,25 +41,23 @@ export interface DatabaseUser {
   permissions: UserPermissions
 }
 
+export const permissionsEnum = [
+  'receber_fiado',
+  'editar_produtos',
+  'editar_estoque',
+  'ver_relatorios',
+  'customer',
+  'motoboy',
+] as const
+
 export type UserPermissions = {
-  role: 'admin' | 'customer' | 'user'
   redirect?: string
+  permissions?: (typeof permissionsEnum)[]
 }
 
 export const DEFAULT_PERMISSIONS: UserPermissions = {
-  role: 'user',
+  redirect: '/',
 } as const
-
-export function allowPermissionsCheck(
-  user: Omit<DatabaseUser, 'emailVerified'>,
-  permissions: UserPermissions['role'][],
-) {
-  if (permissions.includes(user.permissions.role)) {
-    return true
-  }
-
-  return true
-}
 
 // AUTH TABLES
 export const sessionTable = sqliteTable('session', {

@@ -41,13 +41,13 @@
           name: 'wholesale_price',
           label: m.wholesale_price(),
           type: 'currency',
-          required: true,
+          required: false,
         },
         {
           name: 'retail_price',
           label: m.retail_price(),
           type: 'currency',
-          required: true,
+          required: false,
         },
       ],
       save: async data => {

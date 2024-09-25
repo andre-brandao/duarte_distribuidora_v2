@@ -18,8 +18,10 @@
   import ModalEndereco from './ModalEndereco.svelte'
   import ModalCliente from './ModalCliente.svelte'
   import { onDestroy } from 'svelte';
-  import ModalPagamento from './ModalPagamento.svelte'
+  //import ModalPagamento from './ModalPagamento.svelte'
   import CaixaColumn from './CaixaColumn.svelte'
+  import type { InsertOrderPayment } from '$lib/server/db/schema'
+  import PaymentCashier from '$lib/components/PaymentCashier.svelte'
 
   const cart = getCartContext()
 
@@ -40,56 +42,64 @@
 
   let filteredProducts = products
 
-  $:console.log(filteredProducts)
+  let isDelivery = false
 
-  //TODO:TIPAGEM DA VARIAVEL metodo_pagamento - status_pagamento
-  async function createOrder(metodo_pagamento: any,status_pagamento:any,isChecked:boolean,amount_paid:number) {
+  function toggleDelivery(){
+    isDelivery = !isDelivery
+  }
+
+ async function createOrder(
+    payments: Omit<InsertOrderPayment, 'order_id'>[],
+    isChecked: boolean,
+  ) {
     let total = Object.values($cart).reduce((acc, item) => {
-    return acc + item.item[item.is_retail ? 'retail_price': 'wholesale_price'] * item.quantity
+      return (
+        acc +
+        item.item[item.is_retail ? 'retail_price' : 'wholesale_price'] *
+          item.quantity
+      )
     }, 0)
-    try {  
-        const resp = await trpc($page).customer.insertOrder.mutate({
+    try {
+      // TODO: add new cases
+        const resp = await trpc($page).customer.order.insetPaidOrder.mutate({
           order_info: {
             customer_id: clienteSelecionado?.id,
             address_id: clienteSelecionado?.adresses[0].id,
             total: total,
             observation: observacao,
-          },
-          payment_info:{
-            payment_method: metodo_pagamento,
-            payment_status: status_pagamento,
-            amount_paid:amount_paid
+            type: 'ATACADO',
+            //TODO: Type
+            cashier_id: caixa.id,
+            payment_info: payments,
           },
           order_items: Object.values($cart).map(item => ({
             product_id: item.item.id,
             quantity: item.quantity,
-            price: item.item[item.is_retail ? 'retail_price':'wholesale_price'],
-            //price: 12,
+            price:
+              item.item[item.is_retail ? 'retail_price' : 'wholesale_price'],
           })),
         })
-
-        if(!resp){
+        if (!resp) {
           toast.error('Erro ao criar pedido')
           return
         }
-
-        toast.success('Pedido realizado com sucesso!')
-
-        if(isChecked){
-          const respUpdate = await trpc($page).customer.updateOrderStatus.mutate({
+        if (isChecked) {
+          await trpc($page).customer.updateOrderStatus.mutate({
             order_id: resp.order.id,
-            status: 'ENDED'
-        })
-        toast.info('Finalizando pedido..')
+            status: 'DELIVERED',
+          })
+          toast.info('Finalizando pedido..')
         }
+      
+      toast.success('Pedido realizado com sucesso!')
 
-        setTimeout(() => {
-        modal.close();
+      setTimeout(() => {
+        modal.close()
         clienteSelecionado = null
         enderecoCliente = null
-        }, 300);
-        
-        cart.set({})
+      }, 300)
+
+      cart.set({})
     } catch (error: any) {
       toast.error(error.message)
     }
@@ -166,12 +176,10 @@ async function pagamentoModal(){
   let total = Object.values($cart).reduce((acc, item) => {
     return acc + item.item[item.is_retail ? 'retail_price': 'wholesale_price'] * item.quantity
     }, 0)
-  modal.open(ModalPagamento, {
+  modal.open(PaymentCashier, {
     cliente_selecionado: clienteSelecionado,
     total_pedido:total,
-    realizarPedido: (metodo_pagamento,status_pagamento,isChecked,amount_paid) => {
-      createOrder(metodo_pagamento,status_pagamento,isChecked,amount_paid)
-    }
+    save:(payments,isChecked)=>{createOrder(payments,isChecked)}
   })
 }
 
@@ -217,6 +225,21 @@ onDestroy(() =>  {
               disabled={tipo_preco === 'wholesale_price' || Object.values($cart).length >= 1}>Atacado</button>
           </div>
         </div>
+
+
+        <!-- <div class="flex gap-1 flex-col items-center mt-5 justify-center">
+          <div class="flex gap-3 items-center justify-center">
+
+            <h1>É um pedido delivery?</h1>
+            <input type="checkbox" class="toggle toggle-success" checked={isDelivery} on:click={toggleDelivery} />
+          </div>
+          <div>
+            
+          </div>
+          {#if isDelivery}
+              (Modal selecionar motoboy)
+          {/if}
+        </div> -->
 
       </div>
       <div
@@ -300,8 +323,8 @@ onDestroy(() =>  {
           </button>
         <button
           class="btn btn-primary w-full disabled:bg-opacity-50"
-          on:click={pagamentoModal}
           disabled={Object.values($cart).length===0}
+          on:click={pagamentoModal}
         >
           <span class="mr-1">PAGAMENTO</span>
           {@html icons.dolar()}
@@ -310,8 +333,6 @@ onDestroy(() =>  {
     </div>
   </div>
 {/if}
-
-<!-- <pre>{JSON.stringify(data, null, 2)}</pre> -->
 
 <dialog class="modal" bind:this={isOpenModal}>
   <div class="modal-box max-w-4xl">
