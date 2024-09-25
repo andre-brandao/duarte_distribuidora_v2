@@ -71,7 +71,7 @@
     "deds-template": "file:",
     "drizzle-orm": "^0.31.4",
     "drizzle-zod": "^0.5.1",
-    "layerchart": "^0.51.2",
+    "layerchart": "^0.43.8",
     "nodemailer": "^6.9.14",
     "oslo": "^1.2.1",
     "sharp": "^0.33.4",
