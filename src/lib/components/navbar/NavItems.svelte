@@ -1,17 +1,11 @@
 <script lang="ts">
   import { icons } from '$lib/utils/icons'
 
-  import ThemeSwiter from './ThemeSwiter.svelte'
-  import ChangeLanguage from './ChangeLanguage.svelte'
-
   import { modal } from '$lib/components/modal'
   import BugReportModal from '$lib/components/modal/BugReportModal.svelte'
   import * as m from '$msgs'
 
   import {
-    setLanguageTag,
-    sourceLanguageTag,
-    availableLanguageTags,
     languageTag,
   } from '$lib/paraglide/runtime'
 
@@ -30,46 +24,8 @@
   export let showDefaultItems = true
 
   export let navItems: NavItem[] = [
-    // {
-    //   name: 'Cardapio',
-    //   href: '/products',
-    // },
-    // {
-    //   name: 'Admin',
-    //   href: '/admin',
-    //   subItems: [
-    //     {
-    //       name: m.products(),
-    //       href: '/admin/products',
-    //       // icon: icons.cube(),
-    //     },
-    //     {
-    //       name: m.usuarios(),
-    //       href: '/admin/users',
-    //       // icon: icons.users(),
-    //     },
-    //     {
-    //       name: m.customers(),
-    //       href: '/admin/customer',
-    //       // icon: icons.users(),
-    //     },
-    //     {
-    //       name: m.orders(),
-    //       href: '/admin/orders',
-    //       icon: icons.cart(),
-    //     },
-    //     {
-    //       name: m.stock(),
-    //       href: '/admin/stock',
-    //     },
-    //     {
-    //       name: 'Caixa',
-    //       href: '/admin/cashier',
-    //     },
-    //   ],
-    // },
     {
-      name: 'Testing',
+      name: 'Cliente',
       icon: icons.warning(),
       href: '/testing',
       subItems: [
@@ -83,14 +39,14 @@
 
   if ($user?.role === 'admin' && showDefaultItems) {
     navItems.push({
-      name: 'Admin',
+      name: 'Pessoas',
       href: '/admin',
       subItems: [
-        {
-          name: m.products(),
-          href: '/admin/products',
-          // icon: icons.cube(),
-        },
+        // {
+        //   name: m.products(),
+        //   href: '/admin/products',
+        //   // icon: icons.cube(),
+        // },
         {
           name: m.usuarios(),
           href: '/admin/users',
@@ -101,33 +57,62 @@
           href: '/admin/customer',
           // icon: icons.users(),
         },
-        {
-          name: m.orders(),
-          href: '/admin/orders',
-          icon: icons.cart(),
-        },
-        {
-          name: 'Todos pedidos',
-          href: '/admin/orders/allorders',
-        },
-        {
-          name: 'Financeiro',
-          href: '/admin/finance',
-        },
-        {
-          name: m.stock(),
-          href: '/admin/stock',
-        },
-        {
-          name: 'Caixa',
-          href: '/admin/cashier',
-        },
+        // {
+        //   name: 'Financeiro',
+        //   href: '/admin/finance',
+        // },
+        // {
+        //   name: m.stock(),
+        //   href: '/admin/stock',
+        // },
         {
           name: 'Fornecedor',
           href: '/admin/supplier',
         },
+        // {
+        //   name: 'Caixa',
+        //   href: '/admin/cashier',
+        // },
       ],
-    })
+    },
+    
+    {
+        name: 'Pedidos',
+        href: '',
+        subItems: [
+          {
+            name: 'Todos pedidos',
+            href: '/admin/orders/allorders',
+          },
+          {
+            name: m.orders(),
+            href: '/admin/orders',
+          },
+          {
+            name: 'Pedidos fiado',
+            href: '/admin/finance',
+          },
+        ],
+      },
+      {
+        name: 'Produtos',
+        href: '',
+        subItems: [
+          {
+            name: 'Produtos',
+            href: '/admin/products',
+          },
+          {
+            name:'Estoque',
+            href: '/admin/stock',
+          },
+        ],
+      },
+      {
+          name: 'Caixa',
+          href: '/admin/cashier',
+        },
+    )
   }
 
   function isActive(href?: string) {
@@ -139,7 +124,8 @@
   }
 </script>
 
-{#each navItems as navItem, i (navItem.href)}
+{#each navItems as navItem, i (i)}
+
   {@const { name, icon } = navItem}
   <li>
     {#if navItem.subItems}
@@ -152,9 +138,7 @@
         </summary>
         <ul>
           {#each navItem.subItems as subItem, i (subItem.href)}
-            {#if subItem.subItems}
-              <svelte:self navItems={[subItem]} showDefaultItems={false} />
-            {:else}
+       
               <li>
                 <a
                   href={subItem.href}
@@ -168,7 +152,6 @@
                   {subItem.name}
                 </a>
               </li>
-            {/if}
           {/each}
         </ul>
       </details>
