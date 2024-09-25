@@ -81,7 +81,7 @@
     },
   ]
 
-  if ($user?.permissions.role === 'admin' && showDefaultItems) {
+  if ($user?.role === 'admin' && showDefaultItems) {
     navItems.push({
       name: 'Admin',
       href: '/admin',

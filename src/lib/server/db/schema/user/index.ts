@@ -39,6 +39,7 @@ export interface DatabaseUser {
   email: string
   emailVerified: boolean
   permissions: UserPermissions
+  role:  'admin'| 'employee'| 'customer'| 'motoboy'
 }
 
 export const permissionsEnum = [
