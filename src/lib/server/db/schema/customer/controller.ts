@@ -19,7 +19,7 @@ import type {
   InsertOrderPayment,
 } from './index'
 import { db } from '$db'
-import { and, count, eq, gte, ne, or, sql } from 'drizzle-orm'
+import { and, count, eq, gt, gte, ne, or, sql } from 'drizzle-orm'
 
 import { stock, bugReport } from '$db/controller'
 import { cashierTable, cashierTransactionTable } from '../distribuidora'
@@ -82,7 +82,7 @@ export const customer = {
   },
   getPendingFiadoTransactions: async () => {
     return db.query.customerOrderTable.findMany({
-      where: t => gte(t.total, t.amount_paid),
+      where: t => and(gte(t.total, t.amount_paid), eq(t.is_fiado, true)),
       with: {
         customer: true,
       },
@@ -301,7 +301,7 @@ export const customer = {
         total: customerOrderTable.total,
         status: customerOrderTable.status,
         type: customerOrderTable.type,
-        
+
         //customer:
         name: customerTable.name,
         email: customerTable.email,
@@ -309,8 +309,6 @@ export const customer = {
 
         //cashier
         cashier: cashierTable.name,
-
-
       })
       .from(customerOrderTable)
       .leftJoin(
