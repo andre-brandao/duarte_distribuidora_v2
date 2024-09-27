@@ -24,6 +24,7 @@
   import EditRowCurrency from '$lib/components/table/EditRowCurrency.svelte'
   import { createRawSnippet } from 'svelte';
   import SimpleSelect from './SimpleSelect.svelte'
+  import UsedCredits from './UsedCredits.svelte'
 
 
   type Customer = RouterOutputs['customer']['getPaginatedCustomers']['rows'][0]
@@ -124,10 +125,8 @@
       header: 'Used Credit',
       accessorKey: 'used_credit',
       cell: info =>
-        renderComponent(EditRowCurrency<Customer>, {
+        renderComponent(UsedCredits, {
           id: info.row.original.id,
-          colID: 'used_credit',
-          editT: 'number',
           value: info.getValue(),
         }),
     },

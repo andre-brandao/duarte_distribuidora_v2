@@ -57,7 +57,7 @@ export const customer = {
   getCustomerUsedCredit: async (id: SelectCustomer['id']) => {
     return db
       .select({
-        used_credit: sql`SUM(${customerOrderTable.total} - ${customerOrderTable.amount_paid})`,
+        used_credit: sql<number>`SUM(${customerOrderTable.total} - ${customerOrderTable.amount_paid}) as integer`,
       })
       .from(customerOrderTable)
       .where(
@@ -65,7 +65,7 @@ export const customer = {
           eq(customerOrderTable.customer_id, id),
           gte(customerOrderTable.total, customerOrderTable.amount_paid),
         ),
-      )
+      ).get()
   },
   countFiadoTransactions: async (id: SelectCustomer['id']) => {
     return db

@@ -132,6 +132,7 @@ export const customerOrderTable = sqliteTable(
 
     customer_id: integer('customer_id').references(() => customerTable.id),
     address_id: integer('address_id').references(() => addressTable.id),
+    created_by: text('created_by').references(() => userTable.id),
     cachier_id: integer('cachier_id').references(() => cashierTable.id),
     motoboy_id: text('motoboy_id').references(() => userTable.id),
     observation: text('observation'),
@@ -166,6 +167,14 @@ export const customerOrderRelations = relations(
     transactions: many(stockTransactionTable),
 
     payments: many(orderPaymentTable),
+    motoboy: one(userTable, {
+      fields: [customerOrderTable.motoboy_id],
+      references: [userTable.id],
+    }),
+    created_by: one(userTable, {
+      fields: [customerOrderTable.created_by],
+      references: [userTable.id],
+    }),
   }),
 )
 export type SelectCustomerOrder = typeof customerOrderTable.$inferSelect
@@ -206,6 +215,8 @@ export type InsertOrderItem = typeof orderItemTable.$inferInsert
 
 export const orderPaymentTable = sqliteTable('pagamentos', {
   id: integer('id').primaryKey({ autoIncrement: true }).notNull(),
+  created_by: text('created_by').references(() => userTable.id),
+  created_at: text('created_at').default(sql`(CURRENT_TIMESTAMP)`),
   amount_paid: integer('amount_paid').notNull(),
   troco: integer('troco'),
   payment_method: text('payment_method', { enum: paymentMethodEnum }).notNull(),
@@ -224,6 +235,10 @@ export const orderPaymentRelations = relations(
     order: one(customerOrderTable, {
       references: [customerOrderTable.id],
       fields: [orderPaymentTable.order_id],
+    }),
+    created_by: one(userTable, {
+      references: [userTable.id],
+      fields: [orderPaymentTable.created_by],
     }),
   }),
 )

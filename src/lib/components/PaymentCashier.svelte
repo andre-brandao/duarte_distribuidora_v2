@@ -9,12 +9,15 @@
   import { trpc } from '$trpc/client'
   import { page } from '$app/stores'
   import { modal } from './modal'
+  import Loading from './Loading.svelte'
 
   export let total_pedido = 0
 
   export let cliente_selecionado:
     | RouterOutputs['customer']['getCustomers'][0]
     | null = null
+
+  export let motoboySelecionado: RouterOutputs['auth']['getMotoboys'][0] | null = null
 
   export let payments: Omit<InsertOrderPayment, 'order_id'>[] = []
 
@@ -42,6 +45,7 @@
   let isPago = false
   let isDinheiro = false
   let isFiado = false
+  let isLoading = false
   export let isChecked = false
 
   function divideValor(n: number) {
@@ -91,6 +95,7 @@
 
   async function addOrderFiado() {
     try {
+      isLoading = true
       if (cliente_selecionado) {
         const respFiado = await trpc($page).customer.order.insertFiado.mutate({
           order_items: Object.values($cart).map(item => ({
@@ -104,6 +109,7 @@
             address_id: cliente_selecionado.adresses[0].id,
             total: total_pedido,
             observation: 'Este é um pedido FIADO!',
+            motoboy_id: motoboySelecionado?.id,
             type:'ATACADO'
             //TODO: Type
           },
@@ -120,7 +126,9 @@
           toast.info('Finalizando pedido..')
         }
       }
+      isLoading = false
     } catch (error: any) {
+      isLoading=false
       toast.error(error.message)
       console.error(error.message)
     }
@@ -145,9 +153,14 @@
       </div>
       <button
         class="btn btn-secondary"
-        on:click={() => save(payments, isChecked)}
+        disabled={isLoading}
+        on:click={() => {
+          isLoading = true
+          save(payments, isChecked)
+        }
+        }
       >
-        CLIQUE AQUI PARA CONFIRMAR O PAGAMENTO
+        {isLoading ? 'Criando pedido...' : 'CLIQUE AQUI PARA CONFIRMAR O PAGAMENTO'}
       </button>
     </div>
   {:else}
@@ -218,14 +231,14 @@
           <option value="pix">Pix</option>
         </select>
         <hr class="w-full bg-base-300" />
-        <div class="flex justify-center gap-2">
+        <!-- <div class="flex justify-center gap-2">
           Deseja finalizar este pedido?
           <input
             type="checkbox"
             class="checkbox-primary checkbox"
             on:change={() => (isChecked = !isChecked)}
           />
-        </div>
+        </div> -->
       {:else if isDinheiro}
         <div class="flex w-full items-center justify-center gap-4">
           <label class="form-control w-full gap-2">

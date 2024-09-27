@@ -93,19 +93,22 @@ export const stock = router({
   updateSupplier: publicProcedure
     .use(middleware.logged)
     .use(middleware.auth)
-    .input(z.object({ 
-      id: z.number(),
-      supplier: z.object({
-        name:z.string().optional(),
-        cnpj_cpf:z.string().optional(),
-        razao_social:z.string().optional(),
-        phone_1:z.string().optional(),
-        cep:z.string().optional(),
-        ie_rg:z.string().optional()
-      })
-    })).mutation(async({input})=>{
-      const {id,supplier} = input
-      return await stockController.updateSupplier(id,supplier)
+    .input(
+      z.object({
+        id: z.number(),
+        supplier: z.object({
+          name: z.string().optional(),
+          cnpj_cpf: z.string().optional(),
+          razao_social: z.string().optional(),
+          phone_1: z.string().optional(),
+          cep: z.string().optional(),
+          ie_rg: z.string().optional(),
+        }),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      const { id, supplier } = input
+      return await stockController.updateSupplier(id, supplier)
     }),
 
   entradaEstoque: publicProcedure
@@ -185,7 +188,7 @@ export const stock = router({
           .from(cashierTransactionTable)
           .innerJoin(
             cashierTable,
-            eq(cashierTransactionTable.cashier_id, cashierTable.id),
+            eq(cashierTransactionTable.cachier_id, cashierTable.id),
           )
           .$dynamic(),
         cashierTransactionTable,

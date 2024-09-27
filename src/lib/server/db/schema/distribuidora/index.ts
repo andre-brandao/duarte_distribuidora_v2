@@ -10,6 +10,7 @@ import { imageTable } from '../image'
 
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod'
 import { customerOrderTable } from '../customer'
+import { userTable } from '../user'
 
 export const cashierTable = sqliteTable('caixas', {
   id: integer('id', { mode: 'number' }).primaryKey({ autoIncrement: true }),
@@ -43,13 +44,14 @@ export const cashierTransactionTable = sqliteTable('transacao_caixa_dinheiro', {
   updated_at: integer('updated_at', { mode: 'timestamp' }).$onUpdate(
     () => new Date(),
   ),
-  cashier_id: integer('cashier_id')
+  created_by: text('created_by').references(() => userTable.id),
+  cachier_id: integer('cashier_id')
     .notNull()
     .references(() => cashierTable.id),
-  amount: integer('amount').notNull().default(0),
+  amount: integer('amount').notNull(),
   observation: text('observation'),
   type: text('type', { enum: cashierTransactionEnum }).notNull(),
-  order_id: integer('order_id').references(()=> customerOrderTable.id),
+  order_id: integer('order_id').references(() => customerOrderTable.id),
   meta_data: text('meta_data', { mode: 'json' }).notNull(),
 })
 
@@ -57,8 +59,12 @@ export const cashierTransactionRelations = relations(
   cashierTransactionTable,
   ({ one, many }) => ({
     cashier: one(cashierTable, {
-      fields: [cashierTransactionTable.cashier_id],
+      fields: [cashierTransactionTable.cachier_id],
       references: [cashierTable.id],
+    }),
+    created_by: one(userTable, {
+      fields: [cashierTransactionTable.created_by],
+      references: [userTable.id],
     }),
   }),
 )

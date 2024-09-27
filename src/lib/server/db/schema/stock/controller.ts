@@ -37,8 +37,8 @@ function getSKUByID(sku_id: SelectSku['sku']) {
   })
 }
 
-function deleteItemStock(sku:SelectSku['sku']){
-  return db.delete(skuTable).where(eq(skuTable.sku,sku))
+function deleteItemStock(sku: SelectSku['sku']) {
+  return db.delete(skuTable).where(eq(skuTable.sku, sku))
 }
 
 function getTransactionsFromProduto(data: { sku: SelectSku['sku'] }) {
@@ -76,8 +76,15 @@ function getSupplier() {
   return db.select().from(supplierTable)
 }
 
-function updateSupplier(id: SelectSupplier['id'],supplier:Partial<SelectSupplier>) {
-  return db.update(supplierTable).set(supplier).where(eq(supplierTable.id,id)).run()
+function updateSupplier(
+  id: SelectSupplier['id'],
+  supplier: Partial<SelectSupplier>,
+) {
+  return db
+    .update(supplierTable)
+    .set(supplier)
+    .where(eq(supplierTable.id, id))
+    .run()
 }
 
 function queryLastCostPrice(sku: SelectSku['sku']) {
@@ -94,7 +101,7 @@ function getRecentTransactionsCaixa(id: number) {
   return db
     .select()
     .from(cashierTransactionTable)
-    .where(eq(cashierTransactionTable.cashier_id, id))
+    .where(eq(cashierTransactionTable.cachier_id, id))
     .orderBy(desc(cashierTransactionTable.created_at))
     .limit(15)
 }
@@ -122,5 +129,5 @@ export const stock = {
   getRecentTransactionsCaixa,
   getAllTransactionsCaixa,
   deleteItemStock,
-  updateSupplier
+  updateSupplier,
 }

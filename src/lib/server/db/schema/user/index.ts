@@ -5,7 +5,10 @@ import {
 
   // customType,
 } from 'drizzle-orm/sqlite-core'
-import { sql } from 'drizzle-orm'
+import { relations, sql } from 'drizzle-orm'
+import { cashierTransactionTable } from '../distribuidora'
+import { logsTable } from '../bug-report'
+import { customerOrderTable, orderPaymentTable } from '../customer'
 
 export const userTable = sqliteTable('user', {
   id: text('id').notNull().primaryKey(),
@@ -18,7 +21,7 @@ export const userTable = sqliteTable('user', {
   emailVerified: integer('email_verified', { mode: 'boolean' })
     .notNull()
     .default(false),
-  password_hash: text('password_hash').notNull(),
+  password_hash: text('password_hash'),
 
   role: text('role', { enum: ['admin', 'employee', 'customer', 'motoboy'] })
     .notNull()
@@ -28,6 +31,14 @@ export const userTable = sqliteTable('user', {
     .$type<UserPermissions>()
     .default({}),
 })
+
+export const userRelations = relations(userTable, ({  many }) => ({
+  cashier_transactions: many(cashierTransactionTable),
+  logs: many(logsTable),
+  orders_made: many(customerOrderTable),
+  entregou: many(customerOrderTable),
+  payments_created: many(orderPaymentTable),
+}))
 
 export type SelectUser = typeof userTable.$inferSelect
 export type InsertUser = typeof userTable.$inferInsert
@@ -50,10 +61,11 @@ export const permissionsEnum = [
   'customer',
   'motoboy',
 ] as const
+export type Permission = typeof permissionsEnum[number];
 
 export type UserPermissions = {
   redirect?: string
-  permissions?: (typeof permissionsEnum)[]
+  permissions?: Permission[]
 }
 
 export const DEFAULT_PERMISSIONS: UserPermissions = {

@@ -49,7 +49,7 @@
     } else if (daysDiff >= 5) {
       return 'bg-warning text-warning-content'
     } else {
-      return 'bg-base-200'
+      return 'table-zebra'
     }
   }
 </script>
@@ -88,7 +88,7 @@
     </p>
   {:else}
     {#if pedidos_fiados.length > 0}
-      <table class="table">
+      <table class="table table-zebra">
         <thead>
           <tr>
             <th>ID</th>

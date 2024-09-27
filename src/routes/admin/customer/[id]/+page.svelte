@@ -19,6 +19,12 @@
   let { customer, orders } = data
   let newcustomer = customer
 
+  let selectedFilter = 'all';
+
+  $: filteredOrders = selectedFilter === 'fiado'
+    ? orders.filter(order => order.is_fiado)
+    : orders;
+
   let isChanged = false
 
   customer = { ...newcustomer }
@@ -94,8 +100,8 @@
 </pre> -->
 
 <main class="mt-10 min-h-screen">
-  <div class="m-4 flex justify-between">
-    <h1 class="text-3xl font-bold">Informacões do cliente:</h1>
+  <div class="mx-4 flex justify-between items-center">
+    <h1 class="text-xl font-bold">Informacões do cliente:</h1>
     <div class="flex gap-2">
       <button
         class="btn btn-error flex gap-2"
@@ -116,10 +122,36 @@
       </button>
     </div>
   </div>
-  <div class=" grid grid-cols-1 xl:grid-cols-2">
-    <div
-      class="mx-auto mb-6 min-h-96 w-fit rounded-xl border bg-base-200 p-4 shadow-sm xl:mx-4"
-    >
+  <div class="grid grid-cols-2 mt-2">
+    <div class="overflow-x-auto">
+      <table class="table w-full table-zebra table-sm">
+        <thead>
+          <tr class="font-bold">
+            <th>Criado em</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Telefone</th>
+            <th>CPF/CNPJ</th>
+            <th>Max Credit</th>
+            <th>Tipo de Cliente</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>{customer.created_at ? new Date(customer.created_at).toLocaleDateString() : "N/A"}</td>
+            <td>{customer.name}</td>
+            <td>{customer.email || "Não cadastrado"}</td>
+            <td>{customer.phone || "Não cadastrado"}</td>
+            <td>{customer.cpf_cnpj || "Não cadastrado"}</td>
+            <td>R${(customer.max_credit / 100).toFixed(2)}</td>
+            <td>{customer.is_retail ? "Varejo" : "Atacado"}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- <div
+      class="mx-auto mb-6 min-h-96 w-fit rounded-xl border bg-base-200 p-4 shadow-sm xl:mx-4" >
       <div class="mb-2">
         <strong>Data de Criação:</strong>
         <span>{newcustomer.created_at}</span>
@@ -214,10 +246,10 @@
           </button>
         {/if}
       </div>
-    </div>
+    </div> -->
 
-    <div class="max-h-96 overflow-x-auto rounded-lg border lg:mr-4">
-      <table class="table table-zebra">
+    <div class="overflow-x-auto">
+      <table class="table w-full table-sm">
         <thead>
           <tr>
             <th>CEP</th>
@@ -251,11 +283,19 @@
   </div>
 
   {#if orders.length > 0}
-  <div class="card mb-10 p-8 shadow-lg">
-    <h2 class="mb-6 text-3xl font-bold">Pedidos de {customer.name}</h2>
-    {#each orders as order}
-        <CardShowPedidos {order} {customer} columns={4} />
-    {/each}
+  <div class="flex justify-between m-3 items-center">
+    <h2 class="text-2xl font-bold">Pedidos de {customer.name}:</h2>
+    <select bind:value={selectedFilter} class="select select-bordered w-full max-w-xs">
+      <option disabled selected>Filtrar pedidos</option>
+      <option value="all">Todos</option>
+      <option value="fiado">Pedidos fiado</option>
+    </select>
+  </div>
+
+    <div class="grid grid-cols-3 gap-2 mx-3 mb-3">
+      {#each filteredOrders as order}
+          <CardShowPedidos {order} {customer} columns={4} />
+      {/each}
     </div>
   {:else}
     <h1 class="my-2 text-center text-xl">

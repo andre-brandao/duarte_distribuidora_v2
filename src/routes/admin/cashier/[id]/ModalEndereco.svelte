@@ -15,22 +15,26 @@
 
 <Modal title="Enderecos">
   <div class="my-4 flex flex-col gap-4">
-
-    {#each addresses as addres}
-    <div class="flex flex-col bg-base-200 p-4 gap-3 rounded-box text-center">
-      {addres?.cep}
-      {addres?.city}, {addres?.neighborhood}, {addres
-        ?.street}, {addres?.number}
-      <button
-      class="btn btn-primary"
-        on:click={() => {
-          selectedAddress(addres)
-          modal.close()
-        }}
-      >
-        selecione
-      </button>
-    </div>
-    {/each}
+    {#if addresses.length>0}
+      {#each addresses as addres}
+        <div
+          class="flex flex-col gap-3 rounded-box bg-base-200 p-4 text-center"
+        >
+          {addres?.cep}
+          {addres?.city}, {addres?.neighborhood}, {addres?.street}, {addres?.number}
+          <button
+            class="btn btn-primary"
+            on:click={() => {
+              selectedAddress(addres)
+              modal.close()
+            }}
+          >
+            selecione
+          </button>
+        </div>
+      {/each}
+    {:else}
+      <h1 class="m-6 text-center">Nenhum endereco registrado para esse cliente</h1>
+    {/if}
   </div>
 </Modal>

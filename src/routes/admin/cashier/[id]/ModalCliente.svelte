@@ -23,6 +23,10 @@
     phone: '',
     is_retail: true,
   }
+  let errors = {
+    nameError: '',
+    phoneError: ''
+  }
   onMount(async () => {
     try {
       clientes = await trpc($page).customer.getCustomers.query()
@@ -47,6 +51,14 @@
   }
 
   async function handleInsertCliente() {
+    if(newCliente.name.length <3){
+      errors.nameError = 'Nome do cliente deve conter mais de 3 caracteres'
+      return
+    }
+    if(newCliente.phone.length < 5){
+      errors.phoneError = 'Digite um telefone válido'
+      return
+    }
     try {
       isLoading = true
       await trpc($page).customer.insertCustomer.mutate(newCliente)
@@ -96,6 +108,18 @@
       <button class="btn btn-primary" on:click={handleInsertCliente}>
         Adicionar
       </button>
+    </div>
+    <div>
+      {#if errors.nameError}
+      <p class="text-error">
+        {errors.nameError}
+      </p>
+      {/if}
+      {#if errors.phoneError}
+      <p class="text-error">
+        {errors.phoneError}
+      </p>
+      {/if}
     </div>
     <hr />
     <label class="input input-bordered flex items-center gap-2">
