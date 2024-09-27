@@ -5,7 +5,7 @@ import type { UserPermissions } from '$lib/server/db/schema'
 // import { allowPermissionsCheck } from '$db/schema'
 const admin = t.middleware(async ({ next, ctx }) => {
   const { user } = ctx.locals
-  if (user?.permissions.role !== 'admin')
+  if (user?.role !== 'admin')
     throw new TRPCError({
       code: 'UNAUTHORIZED',
       message: 'You must be an admin to access this route',

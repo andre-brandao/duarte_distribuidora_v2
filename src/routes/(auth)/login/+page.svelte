@@ -64,7 +64,7 @@
         onclick={sendMagicLink}
         disabled={isLoading}
       >
-        Get Magic Link
+        {m.magic_link()}
       </button>
     </div>
     <p class="mt-4 text-center text-sm">
@@ -76,7 +76,7 @@
 
     <p class="mt-4 text-center text-sm">
       <a href="/login/password" class="btn btn-outline ">
-        Login with password
+        {m.login_password()}
       </a>
     </p>
   </div>

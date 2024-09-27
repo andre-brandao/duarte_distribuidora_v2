@@ -1,7 +1,7 @@
 <script lang="ts">
   import { toast } from 'svelte-sonner'
   import type { PageData } from './$types'
-  import CardShowPedidos from './CardShowPedidos.svelte'
+  import CardShowPedidos from '$lib/components/cards/CardShowPedidos.svelte'
   import type { RouterInputs, RouterOutputs } from '$trpc/router'
   import { trpc } from '$trpc/client'
   import { page } from '$app/stores'

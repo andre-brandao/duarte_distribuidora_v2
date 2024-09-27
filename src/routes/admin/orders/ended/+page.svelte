@@ -1,5 +1,5 @@
 <script lang="ts">
-  import CardShowPedidos from '../CardShowPedidos.svelte'
+  import CardShowPedidos from '$lib/components/cards/CardShowPedidos.svelte'
   import type { PageData } from './$types'
    import { trpc } from '$trpc/client'
   import { page } from '$app/stores'

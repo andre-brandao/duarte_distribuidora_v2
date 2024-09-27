@@ -19,7 +19,7 @@ import type {
   InsertOrderPayment,
 } from './index'
 import { db } from '$db'
-import { and, count, eq, gt, gte, ne, or, sql } from 'drizzle-orm'
+import { and, count, eq, gt, gte, isNotNull, ne, or, sql } from 'drizzle-orm'
 
 import { stock, bugReport } from '$db/controller'
 import { cashierTable, cashierTransactionTable } from '../distribuidora'
@@ -281,6 +281,22 @@ export const customer = {
       },
     })
   },
+
+  getDeliveryOrders: ()=> {
+    return db.query.customerOrderTable.findMany({
+      where:isNotNull(customerOrderTable.motoboy_id),
+      with: {
+        address: true,
+        customer: true,
+        items: {
+          with: {
+            product: true,
+          },
+        },
+      },
+    })
+  },
+  
   updateOrderPayment: async (id: number, data: Partial<InsertOrderPayment>) => {
     return db
       .update(orderPaymentTable)

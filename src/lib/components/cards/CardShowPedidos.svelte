@@ -24,7 +24,6 @@
         return ' badge-neutral text-neutral-content'
     }
   }
-  
 </script>
 
 <!-- <div class="mb-4 flex justify-between gap-1 text-center text-sm">
@@ -78,9 +77,28 @@
   </div> -->
 
 <div class="card p-2">
+  <div class="flex justify-end">
+    <a href="/admin/orders/{order.id}" class="flex underline gap-2">
+      Visualizar pedido <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        class="lucide lucide-move-right"
+      >
+        <path d="M18 8L22 12L18 16" />
+        <path d="M2 12H22" />
+      </svg>
+    </a>
+  </div>
   <div class="mb-4 rounded-lg border bg-base-200 p-4">
     {#if order.customer}
-      <p class="text-lg mb-2">
+      <p class="mb-2 text-lg">
         <strong>Cliente:</strong>
         {order.customer?.name} - {order.customer?.cellphone ??
           'Telefone sem registro'} - {order.customer?.email}
@@ -99,11 +117,11 @@
 
     <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
       <div>
-        <div
+        <!-- <div
           class={`badge font-semibold ${paymentStatusColor(order.payment_status)}`}
         >
           {order.payment_status}
-        </div>
+        </div> -->
         <p>
           <span class="font-semibold">Criado em:</span>
           {order.created_at}

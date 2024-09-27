@@ -13,7 +13,7 @@
 
   import { toast } from 'svelte-sonner'
   import AddressModal from '$lib/components/modal/AddressModal.svelte'
-  import CardShowPedidos from '../../orders/CardShowPedidos.svelte'
+  import CardShowPedidos from '$lib/components/cards/CardShowPedidos.svelte'
   import * as m from '$msgs'
 
   let { customer, orders } = data

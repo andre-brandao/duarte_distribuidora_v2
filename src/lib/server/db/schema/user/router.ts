@@ -201,4 +201,8 @@ export const auth = router({
       const { userId, permissions } = input
       return await userController.updateUserPermissions(userId, permissions)
     }),
+
+    getMotoboys: publicProcedure.query(() => {
+      return userController.getMotoboys()
+    }),
 })

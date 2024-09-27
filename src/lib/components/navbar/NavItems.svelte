@@ -92,6 +92,10 @@
             name: 'Pedidos fiado',
             href: '/admin/finance',
           },
+          {
+            name: 'Pedidos delivery',
+            href: '/admin/orders/delivery',
+          },
         ],
       },
       {

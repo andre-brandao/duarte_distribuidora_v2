@@ -1,11 +1,8 @@
 <script lang="ts">
-	import TransactionsModal from './TransactionsModal.svelte';
+  import TransactionsModal from './TransactionsModal.svelte'
   import CurrencyInput from '$lib/components/input/CurrencyInput.svelte'
   import type { PageData } from './$types'
-  import Cardapio from '$lib/components/Cardapio.svelte'
   import { icons } from '$lib/utils/icons'
-  import { getImagePath } from '$lib/utils/image'
-
   import { toast } from 'svelte-sonner'
 
   import { trpc } from '$trpc/client'
@@ -13,21 +10,26 @@
 
   import type { RouterOutputs } from '$trpc/router'
   import { modal } from '$components/modal'
-  
+
   import { getCartContext } from '$lib/stores/cart'
   import ModalEndereco from './ModalEndereco.svelte'
   import ModalCliente from './ModalCliente.svelte'
-  import { onDestroy } from 'svelte';
+  import { onDestroy } from 'svelte'
   //import ModalPagamento from './ModalPagamento.svelte'
   import CaixaColumn from './CaixaColumn.svelte'
   import type { InsertOrderPayment } from '$lib/server/db/schema'
   import PaymentCashier from '$lib/components/PaymentCashier.svelte'
+  import CardapioCaixa from './CardapioCaixa.svelte'
+  import CaixaLeftColumn from './CaixaLeftColumn.svelte'
+  import ModalMotoboy from './ModalMotoboy.svelte'
 
   const cart = getCartContext()
 
   export let data: PageData
 
   let { caixa, user, products } = data
+
+  let filteredProducts = products
 
   let isOpenModal: HTMLDialogElement | null = null
 
@@ -38,17 +40,15 @@
   let clienteSelecionado: RouterOutputs['customer']['getCustomers'][0] | null =
     null
 
-  let enderecoCliente: RouterOutputs['customer']['getCustomers'][0]['adresses'][0] | null = null
+  let enderecoCliente:
+    | RouterOutputs['customer']['getCustomers'][0]['adresses'][0]
+    | null = null
 
-  let filteredProducts = products
+  let motoboySelecionado: RouterOutputs['auth']['getMotoboys'][0] | null = null
 
   let isDelivery = false
 
-  function toggleDelivery(){
-    isDelivery = !isDelivery
-  }
-
- async function createOrder(
+  async function createOrder(
     payments: Omit<InsertOrderPayment, 'order_id'>[],
     isChecked: boolean,
   ) {
@@ -61,42 +61,43 @@
     }, 0)
     try {
       // TODO: add new cases
-        const resp = await trpc($page).customer.order.insetPaidOrder.mutate({
-          order_info: {
-            customer_id: clienteSelecionado?.id,
-            address_id: clienteSelecionado?.adresses[0].id,
-            total: total,
-            observation: observacao,
-            type: 'ATACADO',
-            //TODO: Type
-            cashier_id: caixa.id,
-            payment_info: payments,
-          },
-          order_items: Object.values($cart).map(item => ({
-            product_id: item.item.id,
-            quantity: item.quantity,
-            price:
-              item.item[item.is_retail ? 'retail_price' : 'wholesale_price'],
-          })),
+      const resp = await trpc($page).customer.order.insetPaidOrder.mutate({
+        order_info: {
+          customer_id: clienteSelecionado?.id,
+          address_id: clienteSelecionado?.adresses[0].id,
+          total: total,
+          observation: observacao,
+          motoboy_id: isDelivery ? motoboySelecionado?.id : undefined,
+          type: 'ATACADO',
+          //TODO: Type
+          cashier_id: caixa.id,
+          payment_info: payments,
+        },
+        order_items: Object.values($cart).map(item => ({
+          product_id: item.item.id,
+          quantity: item.quantity,
+          price: item.item[item.is_retail ? 'retail_price' : 'wholesale_price'],
+        })),
+      })
+      if (!resp) {
+        toast.error('Erro ao criar pedido')
+        return
+      }
+      if (isChecked) {
+        await trpc($page).customer.updateOrderStatus.mutate({
+          order_id: resp.order.id,
+          status: 'DELIVERED',
         })
-        if (!resp) {
-          toast.error('Erro ao criar pedido')
-          return
-        }
-        if (isChecked) {
-          await trpc($page).customer.updateOrderStatus.mutate({
-            order_id: resp.order.id,
-            status: 'DELIVERED',
-          })
-          toast.info('Finalizando pedido..')
-        }
-      
+        toast.info('Finalizando pedido..')
+      }
+
       toast.success('Pedido realizado com sucesso!')
 
       setTimeout(() => {
         modal.close()
         clienteSelecionado = null
         enderecoCliente = null
+        motoboySelecionado = null
       }, 300)
 
       cart.set({})
@@ -104,29 +105,22 @@
       toast.error(error.message)
     }
   }
-
-  function handleSelectClient() {
-    modal.open(ModalCliente, {
-      selectedClient: client => {
-        clienteSelecionado = client
-        modal.open(ModalEndereco, {
-          addresses: client.adresses,
-          selectedAddress: address => {
-            enderecoCliente = address
-            //TODO:ARRUMAR TIPO
-            console.log(address);          
-          }
-        })
-        if (clienteSelecionado.is_retail) {
-          tipo_preco = 'retail_price'
-        } else {
-          tipo_preco = 'wholesale_price'
-        }
-      },
-    })
-  }
-
   let dinheiro_caixa = 0
+
+  const filterProducts = (value:string) => {
+    filteredProducts = products.map((product) => {
+      const filteredSubProducts = product.products.map(subProduct => {
+        const filteredItems = subProduct.items.filter(item =>
+          item.name.toLowerCase().includes(value.toLowerCase())
+        );
+        return { ...subProduct, items: filteredItems };
+      });
+
+      return { ...product, products: filteredSubProducts };
+    }).filter((product) =>
+      product.products.some(subProduct => subProduct.items.length > 0)
+    );
+  };
 
   async function handleAbrirCaixa() {
     try {
@@ -146,52 +140,62 @@
   }
 
   async function handleFecharCaixa() {
-    const confirmacao = confirm('Você está prestes a fechar o caixa. Deseja continuar?');
-    
+    const confirmacao = confirm(
+      'Você está prestes a fechar o caixa. Deseja continuar?',
+    )
+
     if (!confirmacao) {
-        return;
+      return
     }
     try {
-        const resp = await trpc($page).distribuidora.fecharCaixa.mutate({
-            id: caixa.id,
-            data: {
-                amount: dinheiro_caixa,
-            },
-        });
-        console.log(resp);
-        toast.success('Caixa fechado com sucesso!');
-        window.location.reload();
+      const resp = await trpc($page).distribuidora.fecharCaixa.mutate({
+        id: caixa.id,
+        data: {
+          amount: dinheiro_caixa,
+        },
+      })
+      console.log(resp)
+      toast.success('Caixa fechado com sucesso!')
+      window.location.reload()
     } catch (error: any) {
-        toast.error(error.message);
+      toast.error(error.message)
     }
-}
+  }
 
-async function seeTransactionsCaixa(){
-  modal.open(TransactionsModal, {
-      caixa_id:caixa.id
-  })
-}
+  async function seeTransactionsCaixa() {
+    modal.open(TransactionsModal, {
+      caixa_id: caixa.id,
+    })
+  }
 
-async function pagamentoModal(){
-  let total = Object.values($cart).reduce((acc, item) => {
-    return acc + item.item[item.is_retail ? 'retail_price': 'wholesale_price'] * item.quantity
+  async function pagamentoModal() {
+    let total = Object.values($cart).reduce((acc, item) => {
+      return (
+        acc +
+        item.item[item.is_retail ? 'retail_price' : 'wholesale_price'] *
+          item.quantity
+      )
     }, 0)
-  modal.open(PaymentCashier, {
-    cliente_selecionado: clienteSelecionado,
-    total_pedido:total,
-    save:(payments,isChecked)=>{createOrder(payments,isChecked)}
-  })
-}
+    modal.open(PaymentCashier, {
+      cliente_selecionado: clienteSelecionado,
+      total_pedido: total,
+      save: (payments, isChecked) => {
+        createOrder(payments, isChecked)
+      },
+    })
+  }
 
-onDestroy(() =>  {
-  cart.set({});
-}
-)
+  onDestroy(() => {
+    cart.set({})
+  })
 </script>
-<div class="flex justify-center m-4">
-  <button class="btn btn-primary" on:click={seeTransactionsCaixa}>Ver transacoes do caixa</button>
+
+<div class="m-4 flex justify-center">
+  <button class="btn btn-primary" on:click={seeTransactionsCaixa}>
+    Ver transacoes do caixa
+  </button>
 </div>
-    <h1 class="text-center text-3xl font-semibold mb-1">Caixa:</h1>
+<h1 class="mb-1 text-center text-3xl font-semibold">Caixa:</h1>
 {#if caixa.status === 'Fechado'}
   <div class="flex justify-center">
     <label class="form-control w-full max-w-xs gap-2">
@@ -199,114 +203,39 @@ onDestroy(() =>  {
         <span class="label-text">Digite o valor no caixa!</span>
       </div>
       <CurrencyInput bind:value={dinheiro_caixa} />
-      <button class="btn btn-primary" on:click={handleAbrirCaixa}>Abrir caixa</button>
+      <button class="btn btn-primary" on:click={handleAbrirCaixa}>
+        Abrir caixa
+      </button>
     </label>
   </div>
 {:else}
-<div class="flex justify-center gap-2 mb-3">
-  <button class="btn btn-error" on:click={handleFecharCaixa}>Fechar caixa</button>
-</div>
-  <div class="mt-15 flex flex-col justify-center gap-4 md:flex-row m-4">
-    <div class="flex h-auto md:flex-col flex-col-reverse justify-between">
-      <h2 class="text-3xl font-bold hidden md:block mb-2">Informações do pedido:</h2>
-      <div>
-
-        <h1 class="text-center">Selecione o tipo de preco</h1>
-        <div class="flex w-full flex-col lg:flex-row">
-
-          <div class="grid flex-grow place-items-center">
-            <button class="btn w-full btn-primary" on:click={()=> {tipo_preco = 'retail_price'}} disabled={tipo_preco === 'retail_price' || Object.values($cart).length >= 1}>Varejo</button>
-          </div>
-          <div class="divider lg:divider-horizontal">OU</div>
-          <div class="grid flex-grow place-items-center">
-            <button class="btn w-full btn-primary" on:click={()=> {
-              tipo_preco = 'wholesale_price'
-              }} 
-              disabled={tipo_preco === 'wholesale_price' || Object.values($cart).length >= 1}>Atacado</button>
-          </div>
-        </div>
-
-
-        <!-- <div class="flex gap-1 flex-col items-center mt-5 justify-center">
-          <div class="flex gap-3 items-center justify-center">
-
-            <h1>É um pedido delivery?</h1>
-            <input type="checkbox" class="toggle toggle-success" checked={isDelivery} on:click={toggleDelivery} />
-          </div>
-          <div>
-            
-          </div>
-          {#if isDelivery}
-              (Modal selecionar motoboy)
-          {/if}
-        </div> -->
-
-      </div>
-      <div
-        class={`mt-3 w-full rounded-lg px-3 py-1 text-center font-bold hidden md:block  ${
-          caixa.status === 'Aberto' ? 'bg-success' : 'bg-error'
-        }`}
-      >
-        {caixa.status === 'Aberto' ? 'Em aberto' : 'Fechado'}
-      </div>
-      <div class="my-4">
-        <p>
-          Número do pedido: <span class="font-bold text-primary">
-            #{caixa.id}
-          </span>
-        </p>
-        <p>
-          Criado por: <span class="font-bold text-primary">{user?.email}</span>
-        </p>
-      </div>
-      <div class="flex md:flex-col flex-col-reverse  gap-2">
-        {#if clienteSelecionado}
-          <div class="flex items-center justify-between">
-            <p class="font-bold">{clienteSelecionado.name}</p>
-            <button
-              class="btn btn-primary"
-              on:click={() => (clienteSelecionado = null, enderecoCliente = null)}
-            >
-              Desvincular
-            </button>
-          </div>
-        {:else}
-          <button
-            class="btn btn-outline w-full disabled:bg-opacity-50"
-            on:click={handleSelectClient}
-          >
-            <span class="mr-1">Vincular compra a um cliente</span>
-          </button>
-        {/if}
-        {#if enderecoCliente}
-        <div class="flex-wrap items-center justify-between max-w-[50vh]">
-          {enderecoCliente?.cep}
-          {enderecoCliente?.city}, {enderecoCliente?.neighborhood}, {enderecoCliente
-            ?.street}, {enderecoCliente?.number}
-          </div>
-        {/if}
-        <a
-          href="/admin/cashier"
-          class="btn btn-primary w-full disabled:bg-opacity-50"
-          on:click={() => cart.set({})}
-        >
-          <span class="mr-1">CANCELAR</span>
-          {@html icons.x()}
-        </a>
-      </div>
-    </div>
-
+  <div class="mb-3 flex justify-center gap-2">
+    <button class="btn btn-error" on:click={handleFecharCaixa}>
+      Fechar caixa
+    </button>
+  </div>
+  <div class="mt-15 m-4 flex flex-col justify-center gap-4 md:flex-row">
+    <CaixaLeftColumn
+      {caixa}
+      {user}
+      bind:tipo_preco
+      bind:clienteSelecionado
+      bind:enderecoCliente
+      bind:isDelivery
+      bind:motoboySelecionado
+    />
     <div
       class="col-auto rounded-lg border-4 border-secondary border-opacity-50 p-4"
     >
-     <CaixaColumn/>
+      <CaixaColumn />
     </div>
 
-    <div class="col-auto flex h-auto md:w-96 flex-col justify-between gap-2">
+    <div class="col-auto flex h-auto flex-col justify-between gap-2 md:w-96">
       <div>
         <button
           class="btn btn-primary w-full"
-          on:click={()=> isOpenModal?.showModal()}>
+          on:click={() => isOpenModal?.showModal()}
+        >
           ACESSAR PRODUTOS {@html icons.basket()}
         </button>
         <p class="mb-2 mt-4">Observações sobre compra:</p>
@@ -316,14 +245,14 @@ onDestroy(() =>  {
           class="textarea textarea-bordered textarea-lg mb-5 w-full"
         ></textarea>
       </div>
-      <div class="flex flex-col gap-2 ">
-          <button class="btn btn-primary w-full disabled:bg-opacity-50">
-            <span class="mr-1">IMPRIMIR</span>
-            {@html icons.print()}
-          </button>
+      <div class="flex flex-col gap-2">
+        <button class="btn btn-primary w-full disabled:bg-opacity-50">
+          <span class="mr-1">IMPRIMIR</span>
+          {@html icons.print()}
+        </button>
         <button
           class="btn btn-primary w-full disabled:bg-opacity-50"
-          disabled={Object.values($cart).length===0}
+          disabled={Object.values($cart).length === 0}
           on:click={pagamentoModal}
         >
           <span class="mr-1">PAGAMENTO</span>
@@ -336,97 +265,7 @@ onDestroy(() =>  {
 
 <dialog class="modal" bind:this={isOpenModal}>
   <div class="modal-box max-w-4xl">
-    <Cardapio data={filteredProducts} onFilterChange={(value)=> {
-        filteredProducts = products
-          .map((product) => {
-            const filteredSubProducts = product.products.map((subProduct) => {
-              const filteredItems = subProduct.items.filter((item) =>
-                item.name.toLowerCase().includes(value)
-              );
-              return { ...subProduct, items: filteredItems };
-            });
-
-            return { ...product, products: filteredSubProducts };
-          })
-          .filter((product) =>
-            product.products.some((subProduct) => subProduct.items.length > 0)
-          );
-
-        }}>
-      {#snippet card(p)}
-          <div class="card w-full p-1">
-            <div class="grid grid-cols-1 gap-3">
-              {#each p.items as item}
-                {@const cartItem = $cart[item.id]}
-  
-                <hr />
-                <div class="flex w-full py-2">
-                  <div class=" flex-none md:w-auto hidden md:block">
-                    <img
-                      alt="imagem"
-                      src={getImagePath(item.image)}
-                      class="h-16 w-16 rounded-lg object-cover md:h-20 md:w-20"
-                    />
-                  </div>
-                  <div class="ml-4 w-full">
-                    <h2 class="md:text-xl font-bold">{item.name}</h2>
-                    <h3 class="md:text-md text-secondary">{p.description}</h3>
-                  </div>
-                  <div class="w-full text-right">
-                    <span class="block pb-3 text-xl font-bold">
-                      R${(item[tipo_preco]/100).toFixed(2)}
-                    </span>
-                    <div class="flex items-center justify-end gap-3 text-center">
-                      {#if cartItem?.quantity >= 1}
-                        <button
-                          class="btn btn-primary hidden md:block"
-                          on:click={()=> {
-                            if(cartItem.quantity <=  1){
-                              cart.removeItem(item.id)
-                            } else {
-                              cart.addItem({
-                                item: item,
-                                quantity: -1,
-                                is_retail: tipo_preco=='retail_price'? true : false
-                              })
-                            }
-                          }}>
-                          {@html icons.minus()}
-                        </button>
-                      {/if}
-                      <input
-                        min="1"
-                        class="md:min-w-10 md:max-w-28 max-w-16  bg-base-100 text-right text-xl font-bold focus:border-yellow-500"
-                        value={$cart[item.id]?.quantity ?? 0}
-                        on:change={e => {
-                          const quant_temp = (e.target as HTMLInputElement)?.value
-                          cart.setItem({
-                            item: item,
-                            quantity: Number(quant_temp),
-                            is_retail: tipo_preco=='retail_price'? true: false
-                          })
-                        }}
-                      />
-                      <button
-                        on:click={() =>
-                          cart.addItem({
-                            item: item,
-                            quantity: 1,
-                            is_retail: tipo_preco=='retail_price'? true: false
-                          })}
-                        class="btn btn-primary"
-                      >
-                        {@html icons.plus()}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              {/each}
-            </div>
-          </div>
-      {/snippet}
-    </Cardapio>
-  
+    <CardapioCaixa products={filteredProducts} {tipo_preco}/>
   </div>
   <form method="dialog" class="modal-backdrop">
     <button>close</button>

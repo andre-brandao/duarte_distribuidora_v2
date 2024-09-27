@@ -169,7 +169,7 @@
             {$user?.email_verified ? 'verified' : 'not verified'}
           </p>
           <p>
-            {$user?.permissions.role}
+            {$user?.role}
           </p>
         </div>
 
