@@ -3,7 +3,14 @@ import { initTRPC } from '@trpc/server'
 // import transformer from 'trpc-transformer';
 import superjson from 'superjson'
 
-export const t = initTRPC.context<Context>().create(
+import type { Permission } from '$db/schema'
+
+export interface Meta {
+  routeName: string
+  permission: Permission
+}
+
+export const t = initTRPC.context<Context>().meta<Meta>().create(
   // { transformer }
   { transformer: superjson },
 )

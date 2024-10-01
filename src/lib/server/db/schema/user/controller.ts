@@ -6,7 +6,7 @@ import {
   userVerificationCodeTable,
   passwordResetCodeTable,
   magicLinkTable,
-  type UserPermissions,
+  type UserMeta,
   type SelectUser,
   sessionTable,
   DEFAULT_PERMISSIONS,
@@ -36,7 +36,7 @@ function getUserByEmail(email: string) {
 }
 
 function getMotoboys() {
-  return db.select().from(userTable).where(eq(userTable.role,'motoboy'))
+  return db.select().from(userTable).where(eq(userTable.role, 'motoboy'))
 }
 
 function getPublicUsersInfo() {
@@ -47,13 +47,11 @@ function getPublicUsersInfo() {
       username: userTable.username,
       email: userTable.email,
       emailVerified: userTable.emailVerified,
-      permissions: userTable.permissions,
+      permissions: userTable.meta,
     })
     .from(userTable)
     .leftJoin(customerTable, eq(customerTable.email, userTable.email))
 }
-
-
 
 export function isValidEmail(email: string): boolean {
   return /.+@.+/.test(email)
@@ -73,11 +71,11 @@ function getSessions(userId: SelectUser['id']) {
 
 function updateUserPermissions(
   userId: SelectUser['id'],
-  permissions: UserPermissions,
+  permissions: UserMeta,
 ) {
   return db
     .update(userTable)
-    .set({ permissions })
+    .set({ meta: permissions })
     .where(eq(userTable.id, userId))
     .run()
 }

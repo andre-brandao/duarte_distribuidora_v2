@@ -37,6 +37,10 @@ export const cashierTransactionEnum = [
   'Saida',
   'Troco',
   'PAGAMENTO',
+  "FECHAMENTO",
+  "ABERTURA",
+  "DEPOSITO",
+  "SAQUE",
 ] as const
 export const cashierTransactionTable = sqliteTable('transacao_caixa_dinheiro', {
   id: integer('id', { mode: 'number' }).primaryKey({ autoIncrement: true }),

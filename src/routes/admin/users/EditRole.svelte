@@ -2,15 +2,15 @@
   import { page } from '$app/stores'
   import Loading from '$lib/components/Loading.svelte'
   import { modal } from '$lib/components/modal'
-  import type { UserPermissions } from '$lib/server/db/schema'
+  import type { UserMeta } from '$lib/server/db/schema'
   import { trpc } from '$trpc/client'
   import { toast } from 'svelte-sonner'
 
-  export let permissions: UserPermissions
+  export let permissions: UserMeta
   export let userId: string
 
   let dialog: HTMLDialogElement
-  let selectedRole: UserPermissions['role'] = permissions.role
+  let selectedRole: UserMeta['role'] = permissions.role
 
   let isLoading = false
 
@@ -29,7 +29,6 @@
         window.location.reload()
       }, 1000)
     } catch (error) {
-        
       isLoading = false
       toast.error('Falha ao editar permissões')
     }
@@ -61,9 +60,7 @@
           <option value="customer">Cliente</option>
         </select>
         {#if permissions.redirect}
-          <select class="select select-bordered">
-
-          </select>
+          <select class="select select-bordered"></select>
         {/if}
       </label>
     {/if}

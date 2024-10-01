@@ -198,7 +198,7 @@
         <div class="grid grid-cols-2 gap-4">
           <a class="btn btn-primary" href="/myprofile">Settings</a>
           <a class="btn btn-primary" href="/admin/cashier">Caixa</a>
-          {#if $user?.permissions.role === 'admin'}
+          {#if $user?.meta.role === 'admin'}
             <a class="btn btn-primary" href="/admin/users">Users</a>
           {/if}
         </div>

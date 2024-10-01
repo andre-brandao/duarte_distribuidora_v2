@@ -27,7 +27,7 @@ CREATE TABLE `user` (
 	`username` text NOT NULL,
 	`email` text NOT NULL,
 	`email_verified` integer DEFAULT false NOT NULL,
-	`password_hash` text NOT NULL,
+	`password_hash` text,
 	`role` text DEFAULT 'customer' NOT NULL,
 	`permissions` text DEFAULT '{}' NOT NULL
 );
@@ -99,6 +99,7 @@ CREATE TABLE `logs` (
 	`created_at` text DEFAULT (CURRENT_TIMESTAMP),
 	`created_by` text DEFAULT '',
 	`text` text NOT NULL,
+	`routeName` text,
 	`metadata` text,
 	`error` text,
 	FOREIGN KEY (`created_by`) REFERENCES `user`(`id`) ON UPDATE no action ON DELETE set null
@@ -198,6 +199,7 @@ CREATE TABLE `pedidos` (
 	`is_fiado` integer NOT NULL,
 	`customer_id` integer,
 	`address_id` integer,
+	`created_by` text,
 	`cachier_id` integer,
 	`motoboy_id` text,
 	`observation` text,
@@ -207,6 +209,7 @@ CREATE TABLE `pedidos` (
 	`type` text NOT NULL,
 	FOREIGN KEY (`customer_id`) REFERENCES `cliente`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`address_id`) REFERENCES `endereco`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`created_by`) REFERENCES `user`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`cachier_id`) REFERENCES `caixas`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`motoboy_id`) REFERENCES `user`(`id`) ON UPDATE no action ON DELETE no action
 );
@@ -240,6 +243,8 @@ CREATE TABLE `item_pedido` (
 --> statement-breakpoint
 CREATE TABLE `pagamentos` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`created_by` text,
+	`created_at` text DEFAULT (CURRENT_TIMESTAMP),
 	`amount_paid` integer NOT NULL,
 	`troco` integer,
 	`payment_method` text NOT NULL,
@@ -247,6 +252,7 @@ CREATE TABLE `pagamentos` (
 	`status` text NOT NULL,
 	`observation` text,
 	`cachier_id` integer,
+	FOREIGN KEY (`created_by`) REFERENCES `user`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`order_id`) REFERENCES `pedidos`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`cachier_id`) REFERENCES `caixas`(`id`) ON UPDATE no action ON DELETE no action
 );
@@ -264,12 +270,14 @@ CREATE TABLE `transacao_caixa_dinheiro` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`created_at` text DEFAULT (CURRENT_TIMESTAMP),
 	`updated_at` integer,
+	`created_by` text,
 	`cashier_id` integer NOT NULL,
-	`amount` integer DEFAULT 0 NOT NULL,
+	`amount` integer NOT NULL,
 	`observation` text,
 	`type` text NOT NULL,
 	`order_id` integer,
 	`meta_data` text NOT NULL,
+	FOREIGN KEY (`created_by`) REFERENCES `user`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`cashier_id`) REFERENCES `caixas`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`order_id`) REFERENCES `pedidos`(`id`) ON UPDATE no action ON DELETE no action
 );

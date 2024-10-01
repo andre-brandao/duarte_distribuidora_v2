@@ -5,7 +5,7 @@ import { z } from 'zod'
 import { distribuidora as distribuidoraController, stock } from '$db/controller'
 import {
   insertCashierSchema,
-  cashierTransactionEnum
+  cashierTransactionEnum,
 } from '$lib/server/db/schema'
 
 import { paramsSchema } from '$lib/components/table'
@@ -14,18 +14,19 @@ import { tableHelper } from '$lib/server/db/utils'
 import { middleware } from '$trpc/middleware'
 
 export const distribuidora = router({
-
-
   insertCashier: publicProcedure
+    .meta({
+      routeName: 'Criar Caixa',
+      permission: 'editar_caixas',
+    })
+    .use(middleware.checkPermission)
     .use(middleware.logged)
-    .use(middleware.auth)
 
     .input(insertCashierSchema)
     .mutation(async ({ input }) => {
       return distribuidoraController.insertCashier(input).returning()
     }),
 
- 
   updateCashier: publicProcedure
     .input(
       z.object({
@@ -51,7 +52,7 @@ export const distribuidora = router({
       const { id, data } = input
       const { user } = ctx.locals
       await distribuidoraController.insertCashierTransaction({
-        cashier_id: id,
+        cachier_id: id,
         meta_data: {
           user,
         },
@@ -66,24 +67,25 @@ export const distribuidora = router({
     .input(
       z.object({
         id: z.number(),
-        data: z.object({
-          amount: z.number(),
-        }),
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      const { id, data } = input
+      const { id } = input
       const { user } = ctx.locals
-      await distribuidoraController.insertCashierTransaction({
-        cashier_id: id,
+
+      const [info] = await distribuidoraController.getCashierById(id)
+
+      await distribuidoraController.justInsertCashierTransaction({
+        cachier_id: id,
         meta_data: {
           user,
         },
         type: 'Saida',
-        amount: data.amount,
+        amount: info.currency,
       })
       return await distribuidoraController.updateCashier(id, {
         status: 'Fechado',
+        currency: 0,
       })
     }),
 
@@ -101,7 +103,7 @@ export const distribuidora = router({
       const { id, data } = input
       const { user } = ctx.locals
       await distribuidoraController.insertCashierTransaction({
-        cashier_id: id,
+        cachier_id: id,
         meta_data: {
           user,
         },
@@ -110,12 +112,14 @@ export const distribuidora = router({
       })
     }),
 
-  getCashierById: publicProcedure.input(z.number()).query(async({input})=>{
+  getCashierById: publicProcedure.input(z.number()).query(async ({ input }) => {
     const id = input
     return await distribuidoraController.getCashierById(id)
   }),
 
-  deleteCashierById: publicProcedure.input(z.number()).mutation(async({input})=> {
-    return await distribuidoraController.deleteCashierById(input)
-  })
+  deleteCashierById: publicProcedure
+    .input(z.number())
+    .mutation(async ({ input }) => {
+      return await distribuidoraController.deleteCashierById(input)
+    }),
 })

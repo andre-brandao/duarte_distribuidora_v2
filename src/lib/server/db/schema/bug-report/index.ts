@@ -40,9 +40,14 @@ export const logsTable = sqliteTable('logs', {
     })
     .default(''),
   text: text('text').notNull(),
+  routeName: text('routeName'),
   metadata: text('metadata', { mode: 'json' }),
   error: text('error'),
 })
+
+export const logRelations = relations(logsTable, ({ one }) => ({
+  reporter: one(userTable),
+}))
 
 export type SelectLogs = typeof logsTable.$inferSelect
 export type InsertLogs = typeof logsTable.$inferInsert

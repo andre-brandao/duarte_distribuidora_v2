@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "62eac68c-8ca9-44a4-80ca-60dc77a3f1e8",
+  "id": "17d4b953-7852-4733-b9c1-c0285f991b10",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "magic_link": {
@@ -195,7 +195,7 @@
           "name": "password_hash",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "role": {
@@ -688,6 +688,13 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true,
+          "autoincrement": false
+        },
+        "routeName": {
+          "name": "routeName",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
           "autoincrement": false
         },
         "metadata": {
@@ -1366,6 +1373,13 @@
           "notNull": false,
           "autoincrement": false
         },
+        "created_by": {
+          "name": "created_by",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
         "cachier_id": {
           "name": "cachier_id",
           "type": "integer",
@@ -1446,6 +1460,19 @@
           "tableTo": "endereco",
           "columnsFrom": [
             "address_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "pedidos_created_by_user_id_fk": {
+          "name": "pedidos_created_by_user_id_fk",
+          "tableFrom": "pedidos",
+          "tableTo": "user",
+          "columnsFrom": [
+            "created_by"
           ],
           "columnsTo": [
             "id"
@@ -1682,6 +1709,21 @@
           "notNull": true,
           "autoincrement": true
         },
+        "created_by": {
+          "name": "created_by",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": "(CURRENT_TIMESTAMP)"
+        },
         "amount_paid": {
           "name": "amount_paid",
           "type": "integer",
@@ -1734,6 +1776,19 @@
       },
       "indexes": {},
       "foreignKeys": {
+        "pagamentos_created_by_user_id_fk": {
+          "name": "pagamentos_created_by_user_id_fk",
+          "tableFrom": "pagamentos",
+          "tableTo": "user",
+          "columnsFrom": [
+            "created_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
         "pagamentos_order_id_pedidos_id_fk": {
           "name": "pagamentos_order_id_pedidos_id_fk",
           "tableFrom": "pagamentos",
@@ -1843,6 +1898,13 @@
           "notNull": false,
           "autoincrement": false
         },
+        "created_by": {
+          "name": "created_by",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
         "cashier_id": {
           "name": "cashier_id",
           "type": "integer",
@@ -1855,8 +1917,7 @@
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
-          "default": 0
+          "autoincrement": false
         },
         "observation": {
           "name": "observation",
@@ -1889,6 +1950,19 @@
       },
       "indexes": {},
       "foreignKeys": {
+        "transacao_caixa_dinheiro_created_by_user_id_fk": {
+          "name": "transacao_caixa_dinheiro_created_by_user_id_fk",
+          "tableFrom": "transacao_caixa_dinheiro",
+          "tableTo": "user",
+          "columnsFrom": [
+            "created_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
         "transacao_caixa_dinheiro_cashier_id_caixas_id_fk": {
           "name": "transacao_caixa_dinheiro_cashier_id_caixas_id_fk",
           "tableFrom": "transacao_caixa_dinheiro",

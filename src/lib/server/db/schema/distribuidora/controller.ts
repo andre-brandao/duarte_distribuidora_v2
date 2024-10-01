@@ -34,29 +34,45 @@ function deleteCashierById(id: SelectCashier['id']) {
 
 function insertCashierTransaction(
   data: InsertCashierTransaction | InsertCashierTransaction[],
+  subtract = false,
 ) {
   if (Array.isArray(data)) {
     return db.transaction(async trx => {
       const total = data.reduce((acc, curr) => acc + curr.amount, 0)
       await trx.insert(cashierTransactionTable).values(data)
-      await trx
-        .update(cashierTable)
-        .set({
-          currency: sql`${cashierTable.currency} + ${total}`,
-        })
-        .where(eq(cashierTable.id, data[0].cachier_id))
+      if (subtract) {
+        await trx
+          .update(cashierTable)
+          .set({
+            currency: sql`${cashierTable.currency} + ${total}`,
+          })
+          .where(eq(cashierTable.id, data[0].cachier_id))
+      }
     })
   } else {
     return db.transaction(async trx => {
       await trx.insert(cashierTransactionTable).values(data)
-      await trx
-        .update(cashierTable)
-        .set({
-          currency: sql`${cashierTable.currency} + ${data.amount}`,
-        })
-        .where(eq(cashierTable.id, data.cachier_id))
+      if (subtract) {
+        await trx
+          .update(cashierTable)
+          .set({
+            currency: sql`${cashierTable.currency} - ${data.amount}`,
+          })
+          .where(eq(cashierTable.id, data.cachier_id))
+      } else {
+        await trx
+          .update(cashierTable)
+          .set({
+            currency: sql`${cashierTable.currency} + ${data.amount}`,
+          })
+          .where(eq(cashierTable.id, data.cachier_id))
+      }
     })
   }
+}
+
+function justInsertCashierTransaction(data: InsertCashierTransaction) {
+  return db.insert(cashierTransactionTable).values(data)
 }
 
 function getCashierTransactions(cachier_id: SelectCashier['id']) {
@@ -75,6 +91,7 @@ export const distribuidora = {
   getCashier,
   getCashierById,
   insertCashierTransaction,
+  justInsertCashierTransaction,
   getCashierTransactions,
   updateCashier,
   deleteCashierById,

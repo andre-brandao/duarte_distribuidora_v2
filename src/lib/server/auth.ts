@@ -18,10 +18,10 @@ export const lucia = new Lucia(adapter, {
   getUserAttributes: attributes => {
     return {
       username: attributes.username,
-      permissions: attributes.permissions,
+      meta: attributes.meta,
       email: attributes.email,
       email_verified: attributes.emailVerified,
-      role: attributes.role
+      role: attributes.role,
     }
   },
 })

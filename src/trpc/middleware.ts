@@ -1,7 +1,7 @@
 import { t } from '$trpc/t'
 import { TRPCError } from '@trpc/server'
 import { bugReport } from '$lib/server/db/controller'
-import type { UserPermissions } from '$lib/server/db/schema'
+
 // import { allowPermissionsCheck } from '$db/schema'
 const admin = t.middleware(async ({ next, ctx }) => {
   const { user } = ctx.locals
@@ -79,9 +79,40 @@ const logged = t.middleware(async ({ next, path, type, ctx, input }) => {
 //   })
 // }
 
+const checkPermission = t.middleware(async ({ next, ctx, meta }) => {
+  const { user } = ctx.locals
+  if (!user) {
+    throw new TRPCError({
+      code: 'UNAUTHORIZED',
+      message: 'You must be logged in to access this route',
+    })
+  }
+
+  if (!meta?.permission) {
+    throw new TRPCError({
+      code: 'UNAUTHORIZED',
+      message: 'Entre em contato com o suporte',
+    })
+  }
+  if (user.role !== 'admin') {
+    const requiredPermissions = user.meta.permissions?.includes(
+      meta?.permission,
+    )
+    if (!requiredPermissions) {
+      throw new TRPCError({
+        code: 'UNAUTHORIZED',
+        message: 'Você não tem permissão para acessar ' + meta.routeName,
+      })
+    }
+  }
+
+  return next()
+})
+
 export const middleware = {
   admin,
   auth,
   logged,
+  checkPermission,
   // allowPermissions,
 }

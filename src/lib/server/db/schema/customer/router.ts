@@ -139,8 +139,9 @@ export const customer = router({
           })
         }
 
-        const used_credit =
-          await customerController.getCustomerUsedCredit(order_info.customer_id)
+        const used_credit = await customerController.getCustomerUsedCredit(
+          order_info.customer_id,
+        )
 
         let credit = 0
 
@@ -168,7 +169,7 @@ export const customer = router({
         const [order] = await db
           .insert(customerOrderTable)
           .values({
-            status:order_info.motoboy_id ?'CONFIRMED': 'DELIVERED',
+            status: order_info.motoboy_id ? 'CONFIRMED' : 'DELIVERED',
             is_fiado: true,
             type: order_info.type,
             total: order_info.total,
@@ -234,6 +235,14 @@ export const customer = router({
         }),
       )
       .mutation(async ({ ctx, input }) => {
+        const userId = ctx.locals.user?.id
+        if (!userId) {
+          throw new TRPCError({
+            code: 'UNAUTHORIZED',
+            message: 'Usuário não autorizado',
+          })
+        }
+
         const { order_items, order_info } = input
 
         const total_paid: number = order_info.payment_info.reduce(
@@ -248,7 +257,7 @@ export const customer = router({
               'Valor pago é menor que o total da compra, adicione mais pagamentos',
           })
         }
-        
+
         const [order] = await db
           .insert(customerOrderTable)
           .values({
@@ -256,12 +265,13 @@ export const customer = router({
             is_fiado: false,
             type: order_info.type,
             motoboy_id: order_info.motoboy_id,
-            status: order_info.motoboy_id ? 'CONFIRMED':'DELIVERED',
+            status: order_info.motoboy_id ? 'CONFIRMED' : 'DELIVERED',
             total: order_info.total,
             customer_id: order_info.customer_id,
             address_id: order_info.address_id,
             cachier_id: order_info.cashier_id,
             observation: order_info.observation,
+            created_by: userId,
           })
           .returning()
 
@@ -274,11 +284,13 @@ export const customer = router({
           .values(items)
           .returning()
 
-        const transaction: InsertCashierTransaction[] = []
+        const trocos: InsertCashierTransaction[] = []
+        const transactions: InsertCashierTransaction[] = []
         for (const payment of order_info.payment_info) {
-          transaction.push({
+          transactions.push({
+            created_by: userId,
             cachier_id: order_info.cashier_id,
-            type: 'Entrada',
+            type: 'PAGAMENTO',
             order_id: order.id,
             meta_data: {
               customer: order_info.customer_id,
@@ -286,7 +298,8 @@ export const customer = router({
             amount: payment.amount_paid,
           })
           if (payment.troco) {
-            transaction.push({
+            trocos.push({
+              created_by: userId,
               cachier_id: order_info.cashier_id,
               type: 'Troco',
               order_id: order.id,
@@ -297,29 +310,14 @@ export const customer = router({
             })
           }
         }
-
-        await distribuidora.insertCashierTransaction(transaction)
-        const payments = order_info.payment_info.map(payment => {
-          switch (payment.payment_method) {
-            case 'dinheiro':
-              if (order_info.cashier_id) {
-                distribuidora.insertCashierTransaction({
-                  cachier_id: order_info.cashier_id,
-                  type: 'PAGAMENTO',
-                  order_id: order.id,
-                  meta_data: {
-                    customer: order_info.customer_id,
-                  },
-                  amount: payment.amount_paid,
-                })
-              }
-              break
-
-            default:
-              break
-          }
-          return { ...payment, order_id: order.id }
-        })
+        await distribuidora.insertCashierTransaction(trocos, true)
+        await distribuidora.insertCashierTransaction(transactions)
+        const payments = order_info.payment_info.map(payment => ({
+          ...payment,
+          cachier_id: order_info.cashier_id,
+          created_by: userId,
+          order_id: order.id,
+        }))
 
         const payments_db = await db
           .insert(orderPaymentTable)

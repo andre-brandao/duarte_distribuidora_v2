@@ -23,16 +23,18 @@ export const userTable = sqliteTable('user', {
     .default(false),
   password_hash: text('password_hash'),
 
-  role: text('role', { enum: ['admin', 'employee', 'customer', 'motoboy'] })
+  role: text('role', {
+    enum: ['admin', 'employee', 'customer', 'motoboy', 'caixa'],
+  })
     .notNull()
     .default('customer'),
-  permissions: text('permissions', { mode: 'json' })
+  meta: text('permissions', { mode: 'json' })
     .notNull()
-    .$type<UserPermissions>()
+    .$type<UserMeta>()
     .default({}),
 })
 
-export const userRelations = relations(userTable, ({  many }) => ({
+export const userRelations = relations(userTable, ({ many }) => ({
   cashier_transactions: many(cashierTransactionTable),
   logs: many(logsTable),
   orders_made: many(customerOrderTable),
@@ -49,8 +51,8 @@ export interface DatabaseUser {
   username: string
   email: string
   emailVerified: boolean
-  permissions: UserPermissions
-  role:  'admin'| 'employee'| 'customer'| 'motoboy'
+  meta: UserMeta
+  role: 'admin' | 'employee' | 'customer' | 'motoboy' | 'caixa'
 }
 
 export const permissionsEnum = [
@@ -60,15 +62,16 @@ export const permissionsEnum = [
   'ver_relatorios',
   'customer',
   'motoboy',
+  'editar_caixas'
 ] as const
-export type Permission = typeof permissionsEnum[number];
+export type Permission = (typeof permissionsEnum)[number]
 
-export type UserPermissions = {
+export type UserMeta = {
   redirect?: string
   permissions?: Permission[]
 }
 
-export const DEFAULT_PERMISSIONS: UserPermissions = {
+export const DEFAULT_PERMISSIONS: UserMeta = {
   redirect: '/',
 } as const
 
