@@ -68,6 +68,11 @@
         <Loading />
       </div>
     {/if}
+    {#if motoboys.length === 0}
+    <h1 class="text-center text-lg my-2">
+      Nenhum motoboy cadastrado no sistema
+    </h1>
+    {/if}
     {#if searchTerm && filteredMotoboys.length === 0}
     <div class="mt-6 flex min-h-40 items-center rounded-lg text-center">
       <div class="mx-auto flex w-full max-w-sm flex-col px-4">

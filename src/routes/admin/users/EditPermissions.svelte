@@ -3,26 +3,29 @@
   import Loading from '$lib/components/Loading.svelte'
   import { modal } from '$lib/components/modal'
   import type { DatabaseUser } from '$lib/server/db/schema'
-  import { roleEnum } from '$lib/utils/permissions'
+  import { permissionsEnum } from '$lib/utils/permissions'
   import type { Permission, Role } from '$lib/utils/permissions'
   import { trpc } from '$trpc/client'
   import { toast } from 'svelte-sonner'
 
   export let userId: string
-  export let userRole: Role
   export let userName: string
+  export let userPermissions:Permission[]
 
   let dialog: HTMLDialogElement
-  let selectedRole: Role
+
+  let selectedPermissions: Permission[] = userPermissions
 
   let isLoading = false
 
   async function handleUpdateUserPermission() {
     isLoading = true
     try {
-      await trpc($page).auth.updateUserRole.mutate({
+      await trpc($page).auth.updateUserPermissions.mutate({
         userId: userId,
-        role: selectedRole,
+        meta: {
+          permissions: selectedPermissions,
+        },
       })
       toast.success('Permissões editadas com sucesso!')
       setTimeout(() => {
@@ -37,62 +40,54 @@
   }
 </script>
 
-<div class="flex items-center gap-2">
-  <label class="form-control my-3 w-full">
-    <select class="select select-bordered" bind:value={selectedRole}>
-      <!-- <option disabled selected>Escolha o cargo de {userName}</option> -->
-      <option value={userRole}>{userRole}</option>
-      {#each roleEnum as role}
-        {#if role !== userRole}
-          <option value={role}>{role}</option>
-        {/if}
-      {/each}
-    </select>
-  </label>
+<button class="btn btn-xs btn-primary" onclick={() => dialog.showModal()}>
+  Editar permissões
+</button>
 
-  <button
-    class="btn btn-primary"
-    disabled={(selectedRole === userRole) || isLoading}
-    onclick={handleUpdateUserPermission}
-  >
-    Salvar
-  </button>
-</div>
-
-<!-- <dialog bind:this={dialog} id="my_modal_2" class="modal">
+<dialog bind:this={dialog} id="my_modal_2" class="modal">
   <div class="modal-box">
     <form method="dialog">
       <button class="btn btn-circle btn-ghost btn-sm absolute right-2 top-2">
         ✕
       </button>
     </form>
-    <h3 class="text-lg font-bold">Edite o cargo de {userName}</h3>
+    <h3 class="text-lg font-bold">Edite as permissões de {userName}</h3>
+    <h1><strong>Permissões selecionadas do úsuario:</strong> {selectedPermissions.join(', ')}</h1>
     {#if isLoading}
       <div class="my-10 flex items-center justify-center">
         <Loading />
       </div>
     {:else}
       <label class="form-control my-3 w-full">
-        <select class="select select-bordered" bind:value={selectedRole}>
-          <option disabled selected>Escolha o cargo de {userName}</option>
-          {#each roleEnum as role}
-            <option value={role}>{role}</option>
+        <div class="form-control">
+          {#each permissionsEnum as permissao}
+            <label class="label cursor-pointer">
+              <span class="label-text">{permissao}</span>
+              <input
+                type="checkbox"
+                class="checkbox"
+                bind:group={selectedPermissions}
+                value={permissao}
+              />
+            </label>
           {/each}
-        </select>
+        </div>
       </label>
     {/if}
     <div class="flex justify-end">
-      <button
-        class="btn btn-primary"
-        disabled={isLoading || (selectedRole ? !roleEnum.includes(selectedRole) : true)}
-        onclick={handleUpdateUserPermission}
-      >
-        Salvar cargo
-      </button>
+      {#if selectedPermissions.length != 0}
+        <button
+          class="btn btn-primary"
+          disabled={isLoading}
+          onclick={handleUpdateUserPermission}
+        >
+          Salvar permissões!
+        </button>
+      {/if}
     </div>
   </div>
 
   <form method="dialog" class="modal-backdrop">
     <button>close</button>
   </form>
-</dialog> -->
+</dialog>

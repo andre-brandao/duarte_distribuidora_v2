@@ -46,7 +46,10 @@ export const logsTable = sqliteTable('logs', {
 })
 
 export const logRelations = relations(logsTable, ({ one }) => ({
-  reporter: one(userTable),
+  reporter: one(userTable, {
+    fields:[logsTable.created_by],
+    references:[userTable.id]
+  }),
 }))
 
 export type SelectLogs = typeof logsTable.$inferSelect

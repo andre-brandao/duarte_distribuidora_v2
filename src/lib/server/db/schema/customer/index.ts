@@ -170,10 +170,12 @@ export const customerOrderRelations = relations(
     motoboy: one(userTable, {
       fields: [customerOrderTable.motoboy_id],
       references: [userTable.id],
+      relationName: 'entregou',
     }),
     created_by: one(userTable, {
       fields: [customerOrderTable.created_by],
       references: [userTable.id],
+      relationName: 'orders_made',
     }),
   }),
 )

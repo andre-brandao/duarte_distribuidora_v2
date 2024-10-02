@@ -23,6 +23,7 @@
   import { goto } from '$app/navigation'
   import EditRowCurrency from '$lib/components/table/EditRowCurrency.svelte'
   import EditRole from './EditRole.svelte'
+  import EditPermissions from './EditPermissions.svelte'
 
   type Users = RouterOutputs['auth']['paginatedUsers']['rows'][0]
 
@@ -41,24 +42,35 @@
       header: 'Email',
       accessorKey: 'email',
     },
-    {
-      header: 'Permissoes',
-      cell: info =>
-        renderComponent(EditRole, {
-          permissions: info.row.original.permissions,
-          userId: info.row.original.id,
-        }),
-    },
-
+    
     {
       header: () => 'Email Verified',
       accessorKey: 'emailVerified',
-
+      
       footer: info => info.column.id,
     },
     {
       header: 'Cadastrou em',
       accessorFn: row => new Date(row.created_at ?? '').toLocaleString(),
+    },
+    {
+      header: 'Permissões',
+      cell: info =>
+        renderComponent(EditPermissions, {
+          userId: info.row.original.id,
+          userName:info.row.original.username,
+          userPermissions:info.row.original.meta.permissions ?? []
+        }),
+    },
+    {
+      header: 'Cargo',
+      cell: info =>
+        renderComponent(EditRole, {
+          // permissions: info.row.original.permissions,
+          userRole: info.row.original.role,
+          userId: info.row.original.id,
+          userName:info.row.original.username
+        }),
     },
   ]
 

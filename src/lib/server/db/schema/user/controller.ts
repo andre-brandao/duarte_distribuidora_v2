@@ -11,6 +11,7 @@ import {
   sessionTable,
   DEFAULT_PERMISSIONS,
   customerTable,
+  type DatabaseUser,
 } from '$db/schema'
 
 import { TimeSpan, createDate, isWithinExpirationDate } from 'oslo'
@@ -47,7 +48,8 @@ function getPublicUsersInfo() {
       username: userTable.username,
       email: userTable.email,
       emailVerified: userTable.emailVerified,
-      permissions: userTable.meta,
+      meta: userTable.meta,
+      role:userTable.role
     })
     .from(userTable)
     .leftJoin(customerTable, eq(customerTable.email, userTable.email))
@@ -71,11 +73,26 @@ function getSessions(userId: SelectUser['id']) {
 
 function updateUserPermissions(
   userId: SelectUser['id'],
-  permissions: UserMeta,
+  meta: UserMeta,
 ) {
   return db
     .update(userTable)
-    .set({ meta: permissions })
+    .set({
+      meta,
+    })
+    .where(eq(userTable.id, userId))
+    .run()
+}
+
+function updateUserRole(
+  userId: SelectUser['id'],
+  role: DatabaseUser['role'],
+) {
+  return db
+    .update(userTable)
+    .set({
+      role,
+    })
     .where(eq(userTable.id, userId))
     .run()
 }
@@ -201,4 +218,5 @@ export const user = {
   deleteMagicLinkToken,
   DEFAULT_PERMISSIONS,
   getMotoboys,
+  updateUserRole
 }

@@ -7,7 +7,7 @@
   let delivery_orders = data.delivery_orders
 </script>
 
-{#if delivery_orders}
+{#if delivery_orders.length > 0}
   <div class="grid grid-cols-3">
     {#each delivery_orders as pedido}
       <CardShowPedidos order={pedido} />

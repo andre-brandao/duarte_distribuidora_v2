@@ -191,15 +191,28 @@ export const auth = router({
     .input(
       z.object({
         userId: z.string(),
-        permissions: z.object({
-          role: z.enum(['admin', 'customer', 'user']),
+        meta: z.object({
           redirect: z.string().optional(),
+          permissions: z.array(z.enum([ 'receber_fiado','editar_produtos','editar_estoque','ver_relatorios','customer','motoboy','editar_caixas']))
         }),
       }),
     )
     .mutation(async ({ input }) => {
-      const { userId, permissions } = input
-      return await userController.updateUserPermissions(userId, permissions)
+      const { userId, meta } = input
+      return await userController.updateUserPermissions(userId, meta)
+    }),
+
+    updateUserRole:publicProcedure
+    .use(middleware.admin)
+    .input(
+      z.object({
+        userId: z.string(),
+        role: z.enum(['admin', 'employee', 'customer', 'motoboy', 'caixa']),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      const { userId,role } = input
+      return await userController.updateUserRole(userId, role)
     }),
 
     getMotoboys: publicProcedure.query(() => {
