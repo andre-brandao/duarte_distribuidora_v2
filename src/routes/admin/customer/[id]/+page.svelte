@@ -107,7 +107,7 @@
         class="btn btn-error flex gap-2"
         on:click={() => handleDeleteCustomer(customer.id)}
       >
-        Deletar
+        Deletar cliente
         {@html icons.trash()}
       </button>
       <button
@@ -117,7 +117,7 @@
             customer_id: customer.id,
           })}
       >
-        Add address
+        Adicionar endereço
         {@html icons.plus()}
       </button>
     </div>

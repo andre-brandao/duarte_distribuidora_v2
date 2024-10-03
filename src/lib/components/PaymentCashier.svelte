@@ -1,7 +1,7 @@
 <script lang="ts">
   import CurrencyInput from '$lib/components/input/CurrencyInput.svelte'
   import type { RouterOutputs } from '$trpc/router'
-  import type { InsertOrderPayment } from '$lib/server/db/schema'
+  import type { InsertOrderPayment, SelectAddress } from '$lib/server/db/schema'
   import { icons } from '$lib/utils'
   import { toast } from 'svelte-sonner'
   import CardPayments from './cards/CardPayments.svelte'
@@ -21,9 +21,11 @@
 
   export let payments: Omit<InsertOrderPayment, 'order_id'>[] = []
 
+  export let enderecoSelecionado: SelectAddress | null
+
   export let save: (
     payments: Omit<InsertOrderPayment, 'order_id'>[],
-    isChecked: boolean,
+    // isChecked: boolean,
   ) => void
 
   const cart = getCartContext()
@@ -46,7 +48,7 @@
   let isDinheiro = false
   let isFiado = false
   let isLoading = false
-  export let isChecked = false
+  // export let isChecked = false
 
   function divideValor(n: number) {
     valor_a_pagar = total_pedido - total_paid
@@ -97,7 +99,7 @@
     try {
       isLoading = true
       if (cliente_selecionado) {
-        const respFiado = await trpc($page).customer.order.insertFiado.mutate({
+        await trpc($page).customer.order.insertFiado.mutate({
           order_items: Object.values($cart).map(item => ({
             product_id: item.item.id,
             quantity: item.quantity,
@@ -106,7 +108,7 @@
           })),
           order_info: {
             customer_id: cliente_selecionado.id,
-            address_id: cliente_selecionado.adresses[0].id,
+            address_id: enderecoSelecionado ? enderecoSelecionado.id : undefined,
             total: total_pedido,
             observation: 'Este é um pedido FIADO!',
             motoboy_id: motoboySelecionado?.id,
@@ -118,13 +120,13 @@
         modal.close()
         cart.set({})
         cliente_selecionado = null
-        if (isChecked) {
-          await trpc($page).customer.updateOrderStatus.mutate({
-            order_id: respFiado.order.id,
-            status: 'DELIVERED',
-          })
-          toast.info('Finalizando pedido..')
-        }
+        // if (isChecked) {
+        //   await trpc($page).customer.updateOrderStatus.mutate({
+        //     order_id: respFiado.order.id,
+        //     status: 'DELIVERED',
+        //   })
+        //   toast.info('Finalizando pedido..')
+        // }
       }
       isLoading = false
     } catch (error: any) {
@@ -156,7 +158,7 @@
         disabled={isLoading}
         on:click={() => {
           isLoading = true
-          save(payments, isChecked)
+          save(payments)
         }
         }
       >

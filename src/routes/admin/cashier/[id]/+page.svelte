@@ -50,7 +50,6 @@
 
   async function createOrder(
     payments: Omit<InsertOrderPayment, 'order_id'>[],
-    isChecked: boolean,
   ) {
     let total = Object.values($cart).reduce((acc, item) => {
       return (
@@ -130,9 +129,9 @@
     try {
       const resp = await trpc($page).distribuidora.fecharCaixa.mutate({
         id: caixa.id,
-        data: {
-          amount: dinheiro_caixa,
-        },
+        // data: {
+        //   amount: dinheiro_caixa,
+        // },
       })
       console.log(resp)
       toast.success('Caixa fechado com sucesso!')
@@ -160,8 +159,9 @@
       cliente_selecionado: clienteSelecionado,
       total_pedido: total,
       motoboySelecionado:motoboySelecionado,
-      save: (payments, isChecked) => {
-        createOrder(payments, isChecked)
+      enderecoSelecionado:enderecoCliente,
+      save: (payments) => {
+        createOrder(payments)
       },
     })
   }

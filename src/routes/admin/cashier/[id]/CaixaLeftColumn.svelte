@@ -6,6 +6,9 @@
   import { icons } from '$lib/utils/icons'
   import type { RouterOutputs } from '$trpc/router'
   import ModalMotoboy from './ModalMotoboy.svelte'
+  import { trpc } from '$trpc/client'
+  import { page } from '$app/stores'
+  import { toast } from 'svelte-sonner'
 
   export let tipo_preco: 'retail_price' | 'wholesale_price' = 'retail_price'
   export let caixa
@@ -36,6 +39,7 @@
             enderecoCliente = address
             //TODO:ARRUMAR TIPO
             console.log(address)
+            getDistance()
           },
         })
         if (clienteSelecionado.is_retail) {
@@ -61,6 +65,31 @@
       motoboySelecionado = null
     }
   }
+
+  let distance = 0
+  let taxaEntrega = 0
+
+  async function getDistance() {
+    try {
+      if (enderecoCliente) {
+        distance = await trpc($page).customer.calculateDistance.mutate({
+          cep: enderecoCliente.cep,
+          bairro: enderecoCliente?.neighborhood,
+          state: enderecoCliente.state,
+          city: enderecoCliente?.city,
+          street: enderecoCliente.street,
+          number: enderecoCliente.number,
+          country:enderecoCliente.country
+        })
+        taxaEntrega = distance * 1.5
+        console.log(taxaEntrega)
+        console.log(distance)
+        toast.success('Distancia: '+(distance/1000).toFixed(2)+'km')
+      }
+    } catch (error:any) {
+        toast.error(error.message)
+    }
+  }
 </script>
 
 <div class="flex h-auto flex-col-reverse justify-between md:flex-col">
@@ -72,12 +101,12 @@
         #{caixa.id}
       </span>
     </p> -->
-    <p>
-      Criado por: <span class="font-bold text-success">{user?.email}</span>
-    </p>
+  <p>
+    Criado por: <span class="font-bold text-success">{user?.email}</span>
+  </p>
   <div>
     <!-- <h1 class="text-center mt-2">Selecione o tipo de preco</h1> -->
-    <div class="flex w-full flex-col lg:flex-row mt-2">
+    <div class="mt-2 flex w-full flex-col lg:flex-row">
       <div class="grid flex-grow place-items-center">
         <button
           class="btn btn-primary w-full"
@@ -104,7 +133,6 @@
         </button>
       </div>
     </div>
-
   </div>
   <!-- <div
     class="mt-3 hidden w-full rounded-lg px-3 py-1 text-center font-bold md:block {caixa.status ===
@@ -114,11 +142,13 @@
   >
     {caixa.status === 'Aberto' ? 'Em aberto' : 'Fechado'}
   </div> -->
-  <div class="flex flex-col-reverse gap-2 md:flex-col mt-2">
+  <div class="mt-2 flex flex-col-reverse gap-2 md:flex-col">
     <div class=" rounded-box bg-base-200 p-4">
       {#if clienteSelecionado}
         <div class="flex items-center justify-between gap-2">
-          <p class="font-bold">{clienteSelecionado.name} - {clienteSelecionado.email}</p>
+          <p class="font-bold">
+            {clienteSelecionado.name} - {clienteSelecionado.email}
+          </p>
           <button
             class="btn btn-primary"
             on:click={() => {
@@ -138,12 +168,16 @@
         </button>
       {/if}
       {#if enderecoCliente}
-        <div class="max-w-[50vh] flex-wrap items-center justify-between mt-2">
-         <strong>Endereço:</strong>  {enderecoCliente?.cep}
+        <div class="mt-2 max-w-[50vh] flex-wrap items-center justify-between">
+          <strong>Endereço:</strong>
+          {enderecoCliente?.cep} -
           {enderecoCliente?.city}, {enderecoCliente?.neighborhood}, {enderecoCliente?.street},
-          {enderecoCliente?.number}
+          {enderecoCliente?.number}, {enderecoCliente.state}
         </div>
-      {/if}
+        {#if distance}
+          <h1>Distancia até endereço: {(distance / 1000).toFixed(2)}km</h1>
+        {/if}
+        {/if}
     </div>
     <div class="my-1 flex flex-col items-center justify-center gap-1">
       {#if clienteSelecionado && enderecoCliente}
@@ -160,8 +194,13 @@
       {#if isDelivery && clienteSelecionado}
         {#if motoboySelecionado}
           <div class="m-2 flex w-full items-center justify-center gap-3">
-            <p>
-              Motoboy: <strong>{motoboySelecionado.username}</strong>
+            <p class="flex flex-col">
+              <span>
+                Motoboy: <strong>{motoboySelecionado.username}</strong>
+              </span>
+              {#if taxaEntrega}
+                <h1>Taxa de entrega: R${(taxaEntrega/1000).toFixed(2)}</h1>
+              {/if}
             </p>
             <button
               class="btn btn-accent"

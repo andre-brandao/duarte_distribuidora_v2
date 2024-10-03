@@ -8,13 +8,29 @@
 
   import type { RouterOutputs } from '$trpc/router'
   import type { SelectAddress } from '$lib/server/db/schema'
+  import AddAdress from '$lib/components/AddAdress.svelte'
 
   export let addresses: SelectAddress[] = []
   export let selectedAddress: (address: SelectAddress) => void
+
+  function handleAddressAdded(event:any) {
+    const { newAddress } = event.detail;
+    addresses = [...addresses, newAddress];
+    criarEndereco=false
+  }
+
+  let criarEndereco = false
 </script>
 
 <Modal title="Enderecos">
   <div class="my-4 flex flex-col gap-4">
+    {#if criarEndereco}
+       <AddAdress customer_id={addresses[0].customer_id} on:addressAdded={handleAddressAdded}/>
+       {:else}
+       <span>
+         Deseja adicionar um novo endereço para esse cliente? <button on:click={()=> criarEndereco=true} class="underline text-info">Clique aqui!</button>
+       </span>
+    {/if}
     {#if addresses.length>0}
       {#each addresses as addres}
         <div

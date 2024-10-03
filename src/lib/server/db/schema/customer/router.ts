@@ -26,6 +26,7 @@ import { middleware } from '$trpc/middleware'
 import { db } from '../..'
 import { eq } from 'drizzle-orm'
 import { TRPCError } from '@trpc/server'
+import { geocodeAddress, getDistanceFromLatLonInKm } from '$lib/utils/distance'
 
 export const customer = router({
   insertCustomer: publicProcedure
@@ -149,12 +150,13 @@ export const customer = router({
           const [{ count }] = await customerController.countFiadoTransactions(
             order_info.customer_id,
           )
-          if (count !== 0) {
-            throw new TRPCError({
-              code: 'BAD_REQUEST',
-              message: 'Cliente não possui crédito',
-            })
-          }
+          // if (count !== 0) {
+          //   throw new TRPCError({
+          //     code: 'BAD_REQUEST',
+          //     message: 'Cliente não possui crédito',
+          //   })
+          // }
+          //TODO:TA DANDO ERRO QUANDO FAZ PEDIDO FIADO
         } else {
           credit = used_credit
         }
@@ -310,7 +312,9 @@ export const customer = router({
             })
           }
         }
-        await distribuidora.insertCashierTransaction(trocos, true)
+        if (trocos.length > 0) {
+          await distribuidora.insertCashierTransaction(trocos, true)
+        }
         await distribuidora.insertCashierTransaction(transactions)
         const payments = order_info.payment_info.map(payment => ({
           ...payment,
@@ -452,4 +456,35 @@ export const customer = router({
   getCurrentOrders: publicProcedure.use(middleware.logged).query(() => {
     return customerController.getCurrentOrders()
   }),
+
+  calculateDistance: publicProcedure
+    .input(z.object({
+      cep: z.string(),
+      state:z.string(),
+      city:z.string(),
+      bairro:z.string(),
+      street: z.string(),
+      number:z.string(),
+      country:z.string()
+    }))
+    .mutation(async ({ input }) => {
+      const location = await geocodeAddress(input.street + input.number + input.city + input.bairro + input.state + input.cep + input.country  )
+
+      if (!location) {
+        throw new Error('Endereço não encontrado para calcular taxa de entrega!')
+      }
+      console.log(location)
+
+      const customerPosition = {
+        lat: location.lat,
+        lon: location.lng,
+      }
+
+      const distance = getDistanceFromLatLonInKm(
+        { lat: -19.960593872971, lon: -44.20183490372314 },
+        customerPosition,
+      )
+
+      return distance 
+    }),
 })

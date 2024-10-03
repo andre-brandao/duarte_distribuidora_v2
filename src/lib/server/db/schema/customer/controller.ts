@@ -70,7 +70,12 @@ export const customer = {
   countFiadoTransactions: async (id: SelectCustomer['id']) => {
     return db
       .select({
-        count: count(customerOrderTable.id),
+        count: count(customerOrderTable.id).mapWith((v)=>{
+          if (typeof v === 'number'){
+            return v
+          }
+          return 0
+        }),
       })
       .from(customerOrderTable)
       .where(
