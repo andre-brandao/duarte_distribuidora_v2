@@ -35,6 +35,7 @@
         clienteSelecionado = client
         modal.open(ModalEndereco, {
           addresses: client.adresses,
+          customer_id:clienteSelecionado.id,
           selectedAddress: address => {
             enderecoCliente = address
             //TODO:ARRUMAR TIPO

@@ -12,6 +12,7 @@
 
   export let addresses: SelectAddress[] = []
   export let selectedAddress: (address: SelectAddress) => void
+  export let customer_id = 0
 
   function handleAddressAdded(event:any) {
     const { newAddress } = event.detail;
@@ -20,12 +21,13 @@
   }
 
   let criarEndereco = false
+  $:console.log(criarEndereco)
 </script>
 
 <Modal title="Enderecos">
   <div class="my-4 flex flex-col gap-4">
-    {#if criarEndereco}
-       <AddAdress customer_id={addresses[0].customer_id} on:addressAdded={handleAddressAdded}/>
+    {#if criarEndereco === true}
+       <AddAdress customer_id={customer_id} on:addressAdded={handleAddressAdded}/>
        {:else}
        <span>
          Deseja adicionar um novo endereço para esse cliente? <button on:click={()=> criarEndereco=true} class="underline text-info">Clique aqui!</button>

@@ -35,7 +35,10 @@
     // modal.close()
   }
 
+  let isLoading = false
+
   async function addAddress() {
+    isLoading = true
     try {
       await trpc($page).customer.insertAddress.mutate({
         customer_id: customer_id,
@@ -53,10 +56,12 @@
       dispatch('addressAdded', {
         customer_id,
         newAddress: formEndereco})
+        isLoading=false
     //   window.location.reload()
     } catch (error: any) {
       toast.error(error.message)
       return error.message
+      isLoading=false
     }
   }
 
@@ -182,6 +187,6 @@
     <!-- <button class="btn btn-error" on:click={modal.close}>
       {m.cancel_button()}
     </button> -->
-    <button class="btn btn-primary w-full" on:click={save}>Salvar novo endereco</button>
+    <button class="btn btn-primary w-full"disabled={isLoading} on:click={save}>{isLoading?'Adicionando...':'Salvar novo endereco'}</button>
   </div>
 </div>
