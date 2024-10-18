@@ -9,7 +9,7 @@ import {
 } from '$lib/server/db/schema'
 
 import { paramsSchema } from '$lib/components/table'
-import { tableHelper } from '$lib/server/db/utils'
+// import { tableHelper } from '$lib/server/db/utils'
 
 import { middleware } from '$trpc/middleware'
 

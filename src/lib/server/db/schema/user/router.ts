@@ -13,7 +13,7 @@ import { middleware } from '$trpc/middleware'
 
 import { emailTemplate, sendMail } from '$lib/server/email'
 import { paramsSchema } from '$lib/components/table'
-import { tableHelper } from '$lib/server/db/utils'
+// import { tableHelper } from '$lib/server/db/utils'
 import { userTable } from '$lib/server/db/schema'
 import { generateId } from 'lucia'
 import { permissionsEnum, roleEnum } from '$lib/utils/permissions'
@@ -176,17 +176,17 @@ export const auth = router({
       }
     }),
 
-  paginatedUsers: publicProcedure
-    .use(middleware.admin)
-    .input(paramsSchema)
-    .query(async ({ input }) => {
-      return await tableHelper(
-        userController.getPublicUsersInfo().$dynamic(),
-        userTable,
-        'username',
-        input,
-      )
-    }),
+  // paginatedUsers: publicProcedure
+  //   .use(middleware.admin)
+  //   .input(paramsSchema)
+  //   .query(async ({ input }) => {
+  //     return await tableHelper(
+  //       userController.getPublicUsersInfo().$dynamic(),
+  //       userTable,
+  //       'username',
+  //       input,
+  //     )
+  //   }),
 
   updateUserPermissions: publicProcedure
     .use(middleware.admin)

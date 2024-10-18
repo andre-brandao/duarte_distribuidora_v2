@@ -1,4 +1,4 @@
-<script lang="ts">
+<!-- <script lang="ts">
   import { toast } from 'svelte-sonner'
   import { onMount } from 'svelte'
   import { page } from '$app/stores'
@@ -61,4 +61,4 @@
 
 <div class="container mx-auto my-3 overflow-x-auto p-2">
   <Datatable columns={defaultColumns} {load} />
-</div>
+</div> -->

@@ -24,7 +24,7 @@ import {
 } from '$lib/server/db/schema'
 
 import { paramsSchema } from '$lib/components/table'
-import { tableHelper } from '$lib/server/db/utils'
+// import { tableHelper } from '$lib/server/db/utils'
 
 import { middleware } from '$trpc/middleware'
 import { db } from '../..'
@@ -99,27 +99,27 @@ export const customer = router({
         console.error('Failed to insert address:', error)
       }
     }),
-  getPaginatedCustomers: publicProcedure
-    .input(paramsSchema)
-    .query(async ({ input }) => {
-      return await tableHelper(
-        customerController.getCustomers().$dynamic(),
-        customerTable,
-        'name',
-        input,
-      )
-    }),
+  // getPaginatedCustomers: publicProcedure
+  //   .input(paramsSchema)
+  //   .query(async ({ input }) => {
+  //     return await tableHelper(
+  //       customerController.getCustomers().$dynamic(),
+  //       customerTable,
+  //       'name',
+  //       input,
+  //     )
+  //   }),
 
-  getPaginatedOrders: publicProcedure
-    .input(paramsSchema)
-    .query(async ({ input }) => {
-      return await tableHelper(
-        customerController.getAllOrderInfo().$dynamic(),
-        customerOrderTable,
-        'name',
-        input,
-      )
-    }),
+  // getPaginatedOrders: publicProcedure
+  //   .input(paramsSchema)
+  //   .query(async ({ input }) => {
+  //     return await tableHelper(
+  //       customerController.getAllOrderInfo().$dynamic(),
+  //       customerOrderTable,
+  //       'name',
+  //       input,
+  //     )
+  //   }),
 
   getCustomers: publicProcedure.query(async () => {
     return await customerController.getCustomersWithAddress()

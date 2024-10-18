@@ -15,16 +15,20 @@
   import AddressModal from '$lib/components/modal/AddressModal.svelte'
   import CardShowPedidos from '$lib/components/cards/CardShowPedidos.svelte'
   import * as m from '$msgs'
+  import { onMount } from 'svelte'
+  import DateFilter from '../../orders/allorders/DateFilter.svelte'
 
   let { customer, orders } = data
   let newcustomer = customer
 
   let selectedFilter = 'all';
 
+
   $: filteredOrders = selectedFilter === 'fiado'
     ? orders.filter(order => order.is_fiado)
     : orders;
 
+  $: total = filteredOrders.reduce((acc, order) => acc + order.total, 0);
   let isChanged = false
 
   customer = { ...newcustomer }
@@ -284,7 +288,8 @@
 
   {#if orders.length > 0}
   <div class="flex justify-between m-3 items-center">
-    <h2 class="text-2xl font-bold">Pedidos de {customer.name}:</h2>
+    <h2 class="text-2xl font-bold">Pedidos de {customer.name}: TOTAL: R${(total/100).toFixed(2)}</h2>
+    <DateFilter/>
     <select bind:value={selectedFilter} class="select select-bordered w-full max-w-xs">
       <option disabled selected>Filtrar pedidos</option>
       <option value="all">Todos</option>

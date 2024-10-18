@@ -15,7 +15,7 @@ import {
 } from '$db/schema'
 
 import { paramsSchema } from '$lib/components/table'
-import { tableHelper } from '$lib/server/db/utils'
+// import { tableHelper } from '$lib/server/db/utils'
 
 import { middleware } from '$trpc/middleware'
 import { TRPCError } from '@trpc/server'
@@ -35,52 +35,52 @@ export const stock = router({
       return stockController.insertSKU(input).returning()
     }),
 
-  paginatedSKUs: publicProcedure
-    .input(paramsSchema)
-    .query(async ({ input }) => {
-      return await tableHelper(
-        stockController.getSKU().$dynamic(),
-        stockController.tables.skuTable,
-        'name',
-        input,
-      )
-    }),
+  // paginatedSKUs: publicProcedure
+  //   .input(paramsSchema)
+  //   .query(async ({ input }) => {
+  //     return await tableHelper(
+  //       stockController.getSKU().$dynamic(),
+  //       stockController.tables.skuTable,
+  //       'name',
+  //       input,
+  //     )
+  //   }),
 
-  paginatedTransactions: publicProcedure
-    .input(
-      z.object({
-        sku: z.string(),
-        table_state: paramsSchema,
-      }),
-    )
-    .query(async ({ input }) => {
-      const { sku, table_state } = input
-      return await tableHelper(
-        stockController
-          .getTransactionsFromProduto({
-            sku,
-          })
-          .$dynamic(),
-        stockTransactionTable,
-        '',
-        table_state,
-      )
-    }),
+  // paginatedTransactions: publicProcedure
+  //   .input(
+  //     z.object({
+  //       sku: z.string(),
+  //       table_state: paramsSchema,
+  //     }),
+  //   )
+  //   .query(async ({ input }) => {
+  //     const { sku, table_state } = input
+  //     return await tableHelper(
+  //       stockController
+  //         .getTransactionsFromProduto({
+  //           sku,
+  //         })
+  //         .$dynamic(),
+  //       stockTransactionTable,
+  //       '',
+  //       table_state,
+  //     )
+  //   }),
 
   getSupplier: publicProcedure.query(() => {
     return stockController.getSupplier()
   }),
 
-  paginatedSupplier: publicProcedure
-    .input(paramsSchema)
-    .query(async ({ input }) => {
-      return await tableHelper(
-        stockController.getSupplier().$dynamic(),
-        supplierTable,
-        'name',
-        input,
-      )
-    }),
+  // paginatedSupplier: publicProcedure
+  //   .input(paramsSchema)
+  //   .query(async ({ input }) => {
+  //     return await tableHelper(
+  //       stockController.getSupplier().$dynamic(),
+  //       supplierTable,
+  //       'name',
+  //       input,
+  //     )
+  //   }),
 
   insertSupplier: publicProcedure
     .use(middleware.logged)
@@ -176,24 +176,24 @@ export const stock = router({
     return stockController.deleteItemStock(input)
   }),
 
-  getPaginatedTransacaoCaixa: publicProcedure
-    .input(paramsSchema)
-    .query(async ({ input }) => {
-      return await tableHelper(
-        db
-          .select({
-            cashier_name: cashierTable.name,
-            cashier_transaction: cashierTransactionTable,
-          })
-          .from(cashierTransactionTable)
-          .innerJoin(
-            cashierTable,
-            eq(cashierTransactionTable.cachier_id, cashierTable.id),
-          )
-          .$dynamic(),
-        cashierTransactionTable,
-        'name',
-        input,
-      )
-    }),
+  // getPaginatedTransacaoCaixa: publicProcedure
+  //   .input(paramsSchema)
+  //   .query(async ({ input }) => {
+  //     return await tableHelper(
+  //       db
+  //         .select({
+  //           cashier_name: cashierTable.name,
+  //           cashier_transaction: cashierTransactionTable,
+  //         })
+  //         .from(cashierTransactionTable)
+  //         .innerJoin(
+  //           cashierTable,
+  //           eq(cashierTransactionTable.cachier_id, cashierTable.id),
+  //         )
+  //         .$dynamic(),
+  //       cashierTransactionTable,
+  //       'name',
+  //       input,
+  //     )
+  //   }),
 })

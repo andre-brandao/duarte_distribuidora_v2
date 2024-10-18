@@ -71,6 +71,7 @@
     "clsx": "^2.1.1",
     "d3-array": "^3.2.4",
     "d3-scale": "^4.0.2",
+    "date-fns": "^4.1.0",
     "deds-template": "file:",
     "drizzle-orm": "^0.31.4",
     "drizzle-zod": "^0.5.1",

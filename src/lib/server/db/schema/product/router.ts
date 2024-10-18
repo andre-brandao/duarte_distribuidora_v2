@@ -10,31 +10,31 @@ import {
   insertProductSchema,
 } from '$db/schema'
 
-import { tableHelper } from '$db/utils'
+// import { tableHelper } from '$db/utils'
 import { paramsSchema } from '$lib/components/table'
 import { middleware } from '$trpc/middleware'
 
 export const product = router({
-  paginatedProducts: publicProcedure
-    .input(paramsSchema)
-    .query(async ({ input }) => {
-      return await tableHelper(
-        productController.getProducts().$dynamic(),
-        productController.tables.productTable,
-        'name',
-        input,
-      )
-    }),
-  paginatedProductItems: publicProcedure
-    .input(paramsSchema)
-    .query(async ({ input }) => {
-      return await tableHelper(
-        productController.getProductItems().$dynamic(),
-        productController.tables.productItemTable,
-        'name',
-        input,
-      )
-    }),
+  // paginatedProducts: publicProcedure
+  //   .input(paramsSchema)
+  //   .query(async ({ input }) => {
+  //     return await tableHelper(
+  //       productController.getProducts().$dynamic(),
+  //       productController.tables.productTable,
+  //       'name',
+  //       input,
+  //     )
+  //   }),
+  // paginatedProductItems: publicProcedure
+  //   .input(paramsSchema)
+  //   .query(async ({ input }) => {
+  //     return await tableHelper(
+  //       productController.getProductItems().$dynamic(),
+  //       productController.tables.productItemTable,
+  //       'name',
+  //       input,
+  //     )
+  //   }),
 
   insertProduct: publicProcedure
     .input(insertProductSchema)
