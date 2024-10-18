@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { asc, count, desc, like, type AnyColumn } from 'drizzle-orm'
 import {
   SQLiteTable,
@@ -8,28 +9,28 @@ import { db } from '.'
 
 import type { TableState } from '$components/table'
 
-export async function tableHelper<T extends SQLiteSelect>(
-  qb: T,
-  table: SQLiteTable,
-  seach_column: string,
-  state: TableState,
-) {
-  const { page = 1, pageSize = 15, sort: order, search } = state
-  if (order) {
-    qb = withOrderBy(qb, table, order.field, order.direction)
-  }
-  if (search) {
-    qb = withSearch(qb, table, search, seach_column)
-  }
-  const [rows, total] = await Promise.all([
-    await withPagination(qb, page, pageSize),
-    await getRowCount(table),
-  ])
-  return {
-    rows,
-    total: total[0].count,
-  }
-}
+// export async function tableHelper<T extends SQLiteSelect>(
+//   qb: T,
+//   table: SQLiteTable,
+//   seach_column: string,
+//   state: TableState,
+// ) {
+//   const { page = 1, pageSize = 15, sort: order, search } = state
+//   if (order) {
+//     qb = withOrderBy2(qb, table, order.field, order.direction)
+//   }
+//   if (search) {
+//     qb = withSearch(qb, table, search, seach_column)
+//   }
+//   const [rows, total] = await Promise.all([
+//     await withPagination(qb, page, pageSize),
+//     await getRowCount(table),
+//   ])
+//   return {
+//     rows,
+//     total: total[0].count,
+//   }
+// }
 
 export function withPagination<T extends SQLiteSelect>(
   qb: T,
@@ -48,19 +49,18 @@ export function getSQLiteColumn<T extends SQLiteTable>(
   return column
 }
 
-export function getOrderBy(order: string, column: AnyColumn) {
+export function getOrderBy(column: AnyColumn, order?: string) {
   return order === 'asc' ? asc(column) : desc(column)
 }
 
+
 export function withOrderBy<T extends SQLiteSelect>(
   qb: T,
-  table: SQLiteTable,
-  sort: string,
-  order: string,
+  column?: AnyColumn,
+  order?: string | 'asc' | 'desc',
 ) {
-  const column = getSQLiteColumn(table, sort)
   if (column) {
-    return qb.orderBy(getOrderBy(order, column))
+    return qb.orderBy(getOrderBy(column, order))
   }
   return qb
 }

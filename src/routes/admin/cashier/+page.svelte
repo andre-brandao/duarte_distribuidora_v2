@@ -9,10 +9,12 @@
   import { modal, FormModal } from '$components/modal'
   import { icons } from '$lib/utils'
   import { toast } from 'svelte-sonner'
+  import CurrencyInput from '$lib/components/input/CurrencyInput.svelte'
 
   export let data: PageData
 
   let cashiers = data
+  let taxa = data.taxa
 
   function handleAddCachier() {
     modal.open(FormModal<RouterInputs['distribuidora']['insertCashier']>, {
@@ -57,7 +59,7 @@
     }
   }
 
-  let editingLink: { [key: number]: boolean } = {};
+  let editingLink: { [key: number]: boolean } = {}
 
   function editLink(id: number) {
     editingLink[id] = !editingLink[id]
@@ -76,6 +78,19 @@
       toast.error('Erro ao editar nome')
     }
   }
+
+  async function updateCashierDeliveryFee() {
+    try {
+      await trpc($page).distribuidora.updateAllKm.mutate(taxa[0].taxa_por_km)
+      console.log(taxa[0].taxa_por_km)
+      toast.success('Taxa de entrega atualizada!')
+      isTaxaChanged = false
+    } catch (error: any) {
+      toast.error(error.message)
+    }
+  }
+
+  let isTaxaChanged = false
 </script>
 
 <main class="container mx-auto">
@@ -85,9 +100,26 @@
     <h1 class="text-center text-4xl font-semibold">Selecione o caixa</h1>
 
     <div class="flex gap-2">
-      <a href="/admin/cashier/transactions" class="btn btn-primary">
-        Ver transacões dos caixas
-      </a>
+      <div class="flex gap-2">
+        <a href="/admin/cashier/transactions" class="btn btn-primary">
+          Ver transacões dos caixas
+        </a>
+      </div>
+
+      <div>
+        <div class="flex gap-2">
+          <CurrencyInput bind:value={taxa[0].taxa_por_km} on:change={()=>{isTaxaChanged = true}}/>
+          {#if isTaxaChanged}
+            <button class="btn btn-primary" onclick={updateCashierDeliveryFee}>
+              salvar
+            </button>
+          {/if}
+        </div>
+
+        <div class="label">
+          <span class="label-text">Valor entrega por quilometro</span>
+        </div>
+      </div>
     </div>
   </div>
   <div class="flex flex-col justify-center gap-3">
@@ -108,11 +140,11 @@
               </span>
             </a>
             <button
-            class="btn btn-circle btn-primary"
-            onclick={() => editLink(caixa.id)}
-          >
+              class="btn btn-circle btn-primary"
+              onclick={() => editLink(caixa.id)}
+            >
               {@html icons.edit()}
-          </button>
+            </button>
             <button
               class="btn btn-circle"
               onclick={() => {

@@ -29,8 +29,8 @@ export const customerTable = sqliteTable('cliente', {
   name: text('name').notNull(),
   email: text('email').unique(),
   birth_date: text('birth_date'),
-  cellphone: text('cellphone'),
-  phone: text('phone'),
+  cellphone: text('cellphone').unique(),
+  phone: text('phone').unique(),
   cpf_cnpj: text('cpf_cnpj'),
   rg_ie: text('rg_ie'),
   max_credit: integer('max_credit').notNull().default(50000),
@@ -124,7 +124,7 @@ export const customerOrderTable = sqliteTable(
   {
     id: integer('id').notNull().primaryKey({ autoIncrement: true }),
     // .$defaultFn(() => generateId(15)),
-    created_at: text('created_at').default(sql`(CURRENT_TIMESTAMP)`),
+    created_at: integer('created_at',{ mode: 'timestamp' }).$defaultFn(()=> new Date()).notNull(),
     updated_at: integer('updated_at', { mode: 'timestamp' }).$onUpdate(
       () => new Date(),
     ),
@@ -138,6 +138,7 @@ export const customerOrderTable = sqliteTable(
     observation: text('observation'),
     amount_paid: integer('amount_paid').notNull(),
     total: integer('total').notNull(),
+    taxa_entrega: integer('taxa_entrega'),
     status: text('status', {
       enum: orderStatusEnum,
     }).notNull(),

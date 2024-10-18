@@ -5,7 +5,7 @@
   import { resolveHTTPResponse } from '@trpc/server/http'
   import { toast } from 'svelte-sonner'
 
-  export let value = 0
+  let value:number | null = 0
   export let id
 
   onMount(async () => {
@@ -22,4 +22,8 @@
   })
 </script>
 
-R${(value / 100).toFixed(2)}
+{#if value !== null}
+  R${(value / 100).toFixed(2)}
+{:else}
+  R$0.00
+{/if}

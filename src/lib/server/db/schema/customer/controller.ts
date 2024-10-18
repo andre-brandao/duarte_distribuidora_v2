@@ -87,9 +87,10 @@ export const customer = {
   },
   getPendingFiadoTransactions: async () => {
     return db.query.customerOrderTable.findMany({
-      where: t => and(gte(t.total, t.amount_paid), eq(t.is_fiado, true)),
+      where: t => and(gt(t.total, t.amount_paid), eq(t.is_fiado, true)),
       with: {
         customer: true,
+        payments:true
       },
     })
   },
@@ -113,7 +114,8 @@ export const customer = {
     return db.select().from(customerTable)
   },
   insertAddress: async (input: InsertAddress) => {
-    return db.insert(addressTable).values(input)
+   const [newAddress]= await db.insert(addressTable).values(input).returning()
+   return newAddress
   },
   getCustomerAddress: async (customerId: SelectCustomer['id']) => {
     return db
@@ -212,6 +214,7 @@ export const customer = {
       with: {
         address: true,
         customer: true,
+        payments:true,
         items: {
           with: {
             product: true,
@@ -251,7 +254,7 @@ export const customer = {
   insertOrderPayment: async (data: InsertOrderPayment) => {
     await db.update(customerOrderTable).set({
       amount_paid: sql`${customerOrderTable.amount_paid} + ${data.amount_paid}`,
-    })
+    }).where(eq(customerOrderTable.id, data.order_id))
     return await db.insert(orderPaymentTable).values(data)
   },
   getOrderPayments: (id: number) => {

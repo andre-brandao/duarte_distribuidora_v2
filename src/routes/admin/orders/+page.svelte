@@ -7,6 +7,7 @@
   import { page } from '$app/stores'
   import { onDestroy, onMount } from 'svelte'
   import Loading from '$lib/components/Loading.svelte'
+  import CardSimplePedidos from '$lib/components/cards/CardSimplePedidos.svelte'
   //export let data: PageData
 
   let pedidos: RouterOutputs['customer']['getCurrentOrders'] = []
@@ -33,7 +34,7 @@
   let unsub_getOrders: NodeJS.Timeout
 
   onMount(async () => {
-    await getOrders()
+    pedidos = await trpc($page).customer.getCurrentOrders.query()
     pedidosFiltrados  = pedidos
     unsub_getOrders = setInterval(async()=>{
       await getOrders()
@@ -157,7 +158,7 @@
   
       {#if pedidoSelecionado != 'all' && pedidoSelecionado != 'varejo' && pedidoSelecionado != 'atacado'}
         {#each pedidosFiltrados as pedido}
-          <CardShowPedidos order={pedido} columns={4} />
+          <CardSimplePedidos order={pedido} columns={4} />
         {/each}
       {:else if pedidoSelecionado === 'all' || pedidoSelecionado === 'varejo' || pedidoSelecionado === 'atacado'}
         <div class="grid grid-cols-1 gap-2 xl:grid-cols-3">
@@ -165,77 +166,86 @@
             class={`overflow-y-auto rounded-lg bg-error p-1 ${pedidosAbertos.length > 0 ? 'max-h-[71vh]' : 'max-h-[78vh]'}`}
           >
             <h1 class="text-center text-black">Pedidos Pendentes:</h1>
-            {#each pedidos as pedido}
-              {#if pedido.status === 'PENDING'}
-                <CardShowPedidos
-                columns={1}
-                  button_text="Aceitar pedido"
-                  button_recusar="Recusar pedido"
-                  order={pedido}
-                  click_confirm={async () => {
-                    console.log('click aceitar')
-                    pedido.status = 'CONFIRMED'
-                    await changeStatusPedido({
-                      order_id: pedido.id,
-                      status: 'CONFIRMED',
-                    })
-                  }}
-                  click_refuse={async () => {
-                    console.log('click recusar')
-                    pedido.status = 'CANCELED'
-                    await changeStatusPedido({
-                      order_id: pedido.id,
-                      status: 'CANCELED',
-                    })
-                  }}
-                />
-              {/if}
-            {/each}
+            <div class="flex-col flex gap-2">
+
+              {#each pedidos as pedido}
+                {#if pedido.status === 'PENDING'}
+                  <CardSimplePedidos
+                  columns={1}
+                    button_text="Aceitar pedido"
+                    button_recusar="Recusar pedido"
+                    order={pedido}
+                    click_confirm={async () => {
+                      console.log('click aceitar')
+                      pedido.status = 'CONFIRMED'
+                      await changeStatusPedido({
+                        order_id: pedido.id,
+                        status: 'CONFIRMED',
+                      })
+                    }}
+                    click_refuse={async () => {
+                      console.log('click recusar')
+                      pedido.status = 'CANCELED'
+                      await changeStatusPedido({
+                        order_id: pedido.id,
+                        status: 'CANCELED',
+                      })
+                    }}
+                  />
+                {/if}
+              {/each}
+            </div>
           </div>
   
           <div
             class={`overflow-y-auto rounded-lg bg-warning p-1 ${pedidosAbertos.length > 0 ? 'max-h-[71vh]' : 'max-h-[78vh]'}`}
           >
             <h1 class="text-center text-black">Pedidos aceitos:</h1>
-            {#each pedidos as pedido}
-              {#if pedido.status === 'CONFIRMED'}
-                <CardShowPedidos
-                columns={1}
-                  button_text="A caminho"
-                  order={pedido}
-                  click_confirm={async () => {
-                    console.log('click aceitar')
-                    pedido.status = 'ON THE WAY'
-                    await changeStatusPedido({
-                      order_id: pedido.id,
-                      status: 'ON THE WAY',
-                    })
-                  }}
-                />
-              {/if}
-            {/each}
+            <div class="flex-col flex gap-2">
+
+              {#each pedidos as pedido}
+                {#if pedido.status === 'CONFIRMED'}
+                  <CardSimplePedidos
+                  columns={1}
+                    button_text="A caminho"
+                    order={pedido}
+                    click_confirm={async () => {
+                      console.log('click aceitar')
+                      pedido.status = 'ON THE WAY'
+                      await changeStatusPedido({
+                        order_id: pedido.id,
+                        status: 'ON THE WAY',
+                      })
+                    }}
+                  />
+                {/if}
+              {/each}
+            </div>
           </div>
           <div
             class={`overflow-y-auto rounded-lg bg-success p-1 ${pedidosAbertos.length > 0 ? 'max-h-[71vh]' : 'max-h-[78vh]'}`}
           >
             <h1 class="text-center text-black">A caminho:</h1>
-            {#each pedidos as pedido}
-              {#if pedido.status === 'ON THE WAY'}
-                <CardShowPedidos
-                columns={1}
-                  button_text="Entregue"
-                  order={pedido}
-                  click_confirm={async () => {
-                    console.log('click aceitar')
-                    pedido.status = 'DELIVERED'
-                    await changeStatusPedido({
-                      order_id: pedido.id,
-                      status: 'DELIVERED',
-                    })
-                  }}
-                />
-              {/if}
-            {/each}
+            <div class="flex-col flex gap-2">
+
+              {#each pedidos as pedido}
+                {#if pedido.status === 'ON THE WAY'}
+                  <CardSimplePedidos
+                  columns={1}
+                    button_text="Entregue"
+                    order={pedido}
+                    click_confirm={async () => {
+                      console.log('click aceitar')
+                      pedido.status = 'DELIVERED'
+                      await changeStatusPedido({
+                        order_id: pedido.id,
+                        status: 'DELIVERED',
+                      })
+                    }}
+                  />
+                {/if}
+              {/each}
+            </div>
           </div>
           <!-- <div
             class={`overflow-y-auto rounded-lg bg-success p-1 ${pedidosAbertos.length > 0 ? 'max-h-[71vh]' : 'max-h-[78vh]'}`}

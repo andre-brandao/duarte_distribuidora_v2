@@ -3,11 +3,11 @@ import { initTRPC } from '@trpc/server'
 // import transformer from 'trpc-transformer';
 import superjson from 'superjson'
 
-import type { Permission } from '$db/schema'
+import type { Permission } from '$lib/utils/permissions'
 
 export interface Meta {
   routeName: string
-  permission: Permission
+  permission?: Permission
 }
 
 export const t = initTRPC.context<Context>().meta<Meta>().create(

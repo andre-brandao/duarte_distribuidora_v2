@@ -2,7 +2,11 @@
 import { publicProcedure, router } from '$trpc/t'
 
 import { z } from 'zod'
-import { customer as customerController, distribuidora } from '$db/controller'
+import {
+  bugReport,
+  customer as customerController,
+  distribuidora,
+} from '$db/controller'
 import {
   insertCustomerSchema,
   insertAddressSchema,
@@ -27,9 +31,14 @@ import { db } from '../..'
 import { eq } from 'drizzle-orm'
 import { TRPCError } from '@trpc/server'
 import { geocodeAddress, getDistanceFromLatLonInKm } from '$lib/utils/distance'
+import { env } from '$env/dynamic/private'
 
 export const customer = router({
   insertCustomer: publicProcedure
+    .meta({
+      routeName: 'Adicionar Cliente',
+      permission: 'editar_clientes',
+    })
     .use(middleware.auth)
     .use(middleware.logged)
 
@@ -38,6 +47,10 @@ export const customer = router({
       return await customerController.insertCustomer(input).returning()
     }),
   updateCustomer: publicProcedure
+    .meta({
+      routeName: 'Atualizar Cliente',
+      permission: 'editar_clientes',
+    })
     .use(middleware.auth)
     .use(middleware.logged)
     .input(
@@ -60,15 +73,22 @@ export const customer = router({
     }),
 
   deleteCustomer: publicProcedure
-    .use(middleware.logged)
+    .meta({
+      routeName: 'Deletar Cliente',
+      permission: 'editar_clientes',
+    })
     .use(middleware.auth)
-
+    .use(middleware.logged)
     .input(z.number())
     .mutation(async ({ input }) => {
       return await customerController.deleteCustomerById(input)
     }),
 
   insertAddress: publicProcedure
+    .meta({
+      routeName: 'Adicionar Endereço',
+      permission: 'editar_clientes',
+    })
     .use(middleware.auth)
     .use(middleware.logged)
     .input(insertAddressSchema)
@@ -106,8 +126,13 @@ export const customer = router({
   }),
   order: router({
     insertFiado: publicProcedure
-      .use(middleware.logged)
+      .meta({
+        routeName: 'Adicionar Pedido Fiado',
+        permission: 'receber_fiado',
+      })
       .use(middleware.auth)
+      .use(middleware.checkPermission)
+      .use(middleware.logged)
       .input(
         z.object({
           order_items: z.array(
@@ -125,6 +150,7 @@ export const customer = router({
             type: z.enum(orderTypeEnum),
             motoboy_id: z.string().optional(),
             cachier_id: z.number().optional(),
+            taxa_entrega: z.number().optional(),
           }),
         }),
       )
@@ -174,13 +200,16 @@ export const customer = router({
             status: order_info.motoboy_id ? 'CONFIRMED' : 'DELIVERED',
             is_fiado: true,
             type: order_info.type,
-            total: order_info.total,
+            total: order_info.motoboy_id
+              ? order_info.total + (order_info.taxa_entrega ?? 0)
+              : order_info.total,
             amount_paid: 0,
             motoboy_id: order_info.motoboy_id,
             customer_id: order_info.customer_id,
             address_id: order_info.address_id,
             cachier_id: order_info.cachier_id,
             observation: order_info.observation,
+            taxa_entrega: order_info.taxa_entrega,
           })
           .returning()
 
@@ -229,6 +258,7 @@ export const customer = router({
             cashier_id: z.number(),
             type: z.enum(orderTypeEnum),
             motoboy_id: z.string().optional(),
+            taxa_entrega: z.number().optional(),
 
             payment_info: insertOrderPaymentSchema
               .omit({ order_id: true })
@@ -268,12 +298,15 @@ export const customer = router({
             type: order_info.type,
             motoboy_id: order_info.motoboy_id,
             status: order_info.motoboy_id ? 'CONFIRMED' : 'DELIVERED',
-            total: order_info.total,
+            total: order_info.motoboy_id
+              ? order_info.total + (order_info.taxa_entrega ?? 0)
+              : order_info.total,
             customer_id: order_info.customer_id,
             address_id: order_info.address_id,
             cachier_id: order_info.cashier_id,
             observation: order_info.observation,
             created_by: userId,
+            taxa_entrega: order_info.taxa_entrega,
           })
           .returning()
 
@@ -294,6 +327,7 @@ export const customer = router({
             cachier_id: order_info.cashier_id,
             type: 'PAGAMENTO',
             order_id: order.id,
+
             meta_data: {
               customer: order_info.customer_id,
             },
@@ -311,6 +345,22 @@ export const customer = router({
               amount: payment.troco,
             })
           }
+
+          await bugReport.insertLogs({
+            text: `Pagamento de ${payment.amount_paid} para pedido ${order.id}${payment.troco ? ` com troco de ${payment.troco}` : ''}`,
+            created_by: userId,
+            metadata: {
+              order_id: order.id,
+              payment_id: payment.id,
+              customer_id: order_info.customer_id,
+              amount_paid: payment.amount_paid,
+              troco: payment.troco,
+            },
+            type: 'CAIXA',
+            pathname: '/TODO:ROUTE',
+            routeName: 'Pagamento',
+            currency: payment.amount_paid,
+          })
         }
         if (trocos.length > 0) {
           await distribuidora.insertCashierTransaction(trocos, true)
@@ -334,6 +384,83 @@ export const customer = router({
           payments: payments_db,
         }
       }),
+      insertOrderWaiting: publicProcedure
+      .use(middleware.auth)
+      .use(middleware.logged)
+      .input(
+        z.object({
+          order_items: z.array(
+            z.object({
+              product_id: z.number(),
+              quantity: z.number(),
+              price: z.number(),
+            }),
+          ),
+          order_info: z.object({
+            customer_id: z.number(),
+            address_id: z.number(),
+            total: z.number(),
+            observation: z.string(),
+            type: z.enum(orderTypeEnum),
+            motoboy_id: z.string(),
+            cachier_id: z.number().optional(),
+            taxa_entrega: z.number().optional(),
+          }),
+        }),
+      )
+      .mutation(async ({ input }) => {
+        const { order_items, order_info } = input
+        const customer = await customerController.getCustomerById(
+          order_info.customer_id,
+        )
+        if (!customer) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'Cliente não encontrado',
+          })
+        }
+
+        if(!order_info.motoboy_id){
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'Sem motoboy selecionado',
+          })
+        }
+        const [order] = await db
+          .insert(customerOrderTable)
+          .values({
+            status: 'CONFIRMED',
+            is_fiado: false,
+            type: order_info.type,
+            total: order_info.motoboy_id
+              ? order_info.total + (order_info.taxa_entrega ?? 0)
+              : order_info.total,
+            amount_paid: 0,
+            motoboy_id: order_info.motoboy_id,
+            customer_id: order_info.customer_id,
+            address_id: order_info.address_id,
+            cachier_id: order_info.cachier_id,
+            observation: order_info.observation,
+            taxa_entrega: order_info.taxa_entrega,
+          })
+          .returning()
+
+        const items = order_items.map(item => ({
+          ...item,
+          order_id: order.id,
+        }))
+
+        const order_items_db = await db
+          .insert(orderItemTable)
+          .values(items)
+          .returning()
+
+        return {
+          order,
+          order_items: order_items_db,
+          // fiado_transaction,
+        }
+      }),
     payments: router({
       getPendingFiadoTransactions: publicProcedure
         .use(middleware.logged)
@@ -349,21 +476,48 @@ export const customer = router({
           return await customerController.getOrderPayments(input)
         }),
       insertPayment: publicProcedure
+        .meta({
+          routeName: 'Receber Pagamento',
+          permission: 'receber_fiado',
+        })
         .use(middleware.logged)
         .use(middleware.auth)
         .input(
           z.object({
-            payment_info: insertOrderPaymentSchema,
+            payment_info: insertOrderPaymentSchema.omit({ created_by: true }),
           }),
         )
-        .mutation(async ({ input }) => {
+        .mutation(async ({ input, ctx }) => {
           const { payment_info } = input
+          const userId = ctx.locals.user?.id
+          const newPayment = {
+            ...payment_info,
+            created_by: userId,
+          }
+
+          await bugReport.insertLogs({
+            text: `Pagamento de ${payment_info.amount_paid} para pedido ${payment_info.order_id}`,
+            created_by: userId,
+            metadata: {
+              order_id: payment_info.order_id,
+              payment_id: payment_info.id,
+              amount: payment_info.amount_paid,
+            },
+            type: 'CAIXA',
+            pathname: '/TODO:ROUTE',
+            routeName: 'Pagamento',
+            currency: payment_info.amount_paid,
+          })
           return await customerController.insertOrderPayment(payment_info)
         }),
     }),
   }),
 
   updateOrderStatus: publicProcedure
+    .meta({
+      routeName: 'Atualizar Status do Pedido',
+      permission: 'atualizar_pedidos',
+    })
     .use(middleware.logged)
     .use(middleware.auth)
     .input(
@@ -380,8 +534,20 @@ export const customer = router({
         ]),
       }),
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const { order_id, status } = input
+      const user = ctx.locals.user
+      await bugReport.insertLogs({
+        text: `${user?.username} atualizou o status do pedido ${order_id} para ${status}`,
+        created_by: user?.id,
+        metadata: {
+          order_id,
+          status,
+        },
+        type: 'SYSTEM',
+        pathname: '/TODO:ROUTE',
+        routeName: 'Atualizar Pedido',
+      })
       return await customerController.updateOrderStatus(order_id, status)
     }),
 
@@ -408,14 +574,25 @@ export const customer = router({
   //   }),
 
   insertOrderPayment: publicProcedure
+    .meta({
+      routeName: 'Adicionar Pagamento',
+      permission: 'receber_fiado',
+    })
     .use(middleware.logged)
-    .input(insertOrderPaymentSchema)
-    .mutation(async ({ input }) => {
-      return await customerController.insertOrderPayment(input)
+    .input(
+      insertOrderPaymentSchema.omit({
+        created_by: true,
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      const userID = ctx.locals.user?.id
+      return await customerController.insertOrderPayment({
+        ...input,
+        created_by: userID,
+      })
     }),
 
   getOrderPayments: publicProcedure
-    .use(middleware.logged)
     .input(z.number())
     .query(async ({ input }) => {
       return await customerController.getOrderPayments(input)
@@ -458,20 +635,32 @@ export const customer = router({
   }),
 
   calculateDistance: publicProcedure
-    .input(z.object({
-      cep: z.string(),
-      state:z.string(),
-      city:z.string(),
-      bairro:z.string(),
-      street: z.string(),
-      number:z.string(),
-      country:z.string()
-    }))
+    .input(
+      z.object({
+        cep: z.string(),
+        state: z.string(),
+        city: z.string(),
+        bairro: z.string(),
+        street: z.string(),
+        number: z.string(),
+        country: z.string(),
+      }),
+    )
     .mutation(async ({ input }) => {
-      const location = await geocodeAddress(input.street + input.number + input.city + input.bairro + input.state + input.cep + input.country  )
+      const location = await geocodeAddress(
+        input.street +
+          input.number +
+          input.city +
+          input.bairro +
+          input.state +
+          input.cep +
+          input.country,
+      )
 
       if (!location) {
-        throw new Error('Endereço não encontrado para calcular taxa de entrega!')
+        throw new Error(
+          'Endereço não encontrado para calcular taxa de entrega!',
+        )
       }
       console.log(location)
 
@@ -480,11 +669,14 @@ export const customer = router({
         lon: location.lng,
       }
 
+      const distribuidoraLat = parseFloat(env.DISTRIBUIDORA_LAT || '0')
+      const distribuidoraLong = parseFloat(env.DISTRIBUIDORA_LONG || '0')
+
       const distance = getDistanceFromLatLonInKm(
-        { lat: -19.960593872971, lon: -44.20183490372314 },
+        { lat: distribuidoraLat, lon: distribuidoraLong },
         customerPosition,
       )
 
-      return distance 
+      return distance
     }),
 })

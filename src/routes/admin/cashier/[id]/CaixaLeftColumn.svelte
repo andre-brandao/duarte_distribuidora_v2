@@ -9,6 +9,8 @@
   import { trpc } from '$trpc/client'
   import { page } from '$app/stores'
   import { toast } from 'svelte-sonner'
+  import { onMount } from 'svelte'
+  import CurrencyInput from '$lib/components/input/CurrencyInput.svelte'
 
   export let tipo_preco: 'retail_price' | 'wholesale_price' = 'retail_price'
   export let caixa
@@ -27,7 +29,18 @@
     | null = null
 
   export let isDelivery = false
+
+  export let taxaEntrega = 0
+  
   const cart = getCartContext()
+
+  let fee = 0
+
+  onMount(async ()=>{
+    const resp = await trpc($page).distribuidora.getFee.query()
+
+    fee = resp[0].taxa_por_km
+  })
 
   function handleSelectClient() {
     modal.open(ModalCliente, {
@@ -35,7 +48,7 @@
         clienteSelecionado = client
         modal.open(ModalEndereco, {
           addresses: client.adresses,
-          customer_id:clienteSelecionado.id,
+          customer_id: clienteSelecionado.id,
           selectedAddress: address => {
             enderecoCliente = address
             //TODO:ARRUMAR TIPO
@@ -68,8 +81,7 @@
   }
 
   let distance = 0
-  let taxaEntrega = 0
-
+  
   async function getDistance() {
     try {
       if (enderecoCliente) {
@@ -80,16 +92,22 @@
           city: enderecoCliente?.city,
           street: enderecoCliente.street,
           number: enderecoCliente.number,
-          country:enderecoCliente.country
+          country: enderecoCliente.country,
         })
-        taxaEntrega = distance * 1.5
+        taxaEntrega = (distance / 1000) * (fee/100);
+        taxaEntrega *= 100
+        taxaEntrega = Math.round(taxaEntrega);
         console.log(taxaEntrega)
         console.log(distance)
-        toast.success('Distancia: '+(distance/1000).toFixed(2)+'km')
+        toast.success('Distancia: ' + (distance / 1000).toFixed(2) + 'km')
       }
-    } catch (error:any) {
-        toast.error(error.message)
+    } catch (error: any) {
+      toast.error(error.message)
     }
+  }
+
+  $: if(enderecoCliente) {
+    isDelivery = true
   }
 </script>
 
@@ -155,6 +173,8 @@
             on:click={() => {
               clienteSelecionado = null
               enderecoCliente = null
+              distance = 0
+              taxaEntrega = 0
             }}
           >
             Desvincular
@@ -178,7 +198,13 @@
         {#if distance}
           <h1>Distancia até endereço: {(distance / 1000).toFixed(2)}km</h1>
         {/if}
+        {#if taxaEntrega !==null}
+        <div class="flex flex-col">
+          <span>Taxa de entrega: R${(taxaEntrega / 100).toFixed(2)}</span>
+          <span class="mt-2">Definir manualmente valor da entrega: <CurrencyInput bind:value={taxaEntrega}/></span>
+        </div>
         {/if}
+      {/if}
     </div>
     <div class="my-1 flex flex-col items-center justify-center gap-1">
       {#if clienteSelecionado && enderecoCliente}
@@ -199,9 +225,6 @@
               <span>
                 Motoboy: <strong>{motoboySelecionado.username}</strong>
               </span>
-              {#if taxaEntrega}
-                <h1>Taxa de entrega: R${(taxaEntrega/1000).toFixed(2)}</h1>
-              {/if}
             </p>
             <button
               class="btn btn-accent"

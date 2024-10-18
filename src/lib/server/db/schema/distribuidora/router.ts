@@ -122,4 +122,11 @@ export const distribuidora = router({
     .mutation(async ({ input }) => {
       return await distribuidoraController.deleteCashierById(input)
     }),
+  updateAllKm: publicProcedure.input(z.number()).mutation(({ input }) => {
+    return distribuidoraController.updateKmForAllCaixas(input)
+  }),
+
+  getFee: publicProcedure.query(async()=> {
+    return await distribuidoraController.getFee()
+  })
 })

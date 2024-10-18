@@ -4,9 +4,17 @@
 
   const cart = getCartContext()
 
-  $:total = Object.values($cart).reduce((acc,item) => {
-    return acc + item.item[item.is_retail ? 'retail_price': 'wholesale_price'] *item.quantity
-  },0)
+  export let taxaEntrega = 0
+  export let isDelivery = false
+
+  $: total =
+    Object.values($cart).reduce((acc, item) => {
+      return (
+        acc +
+        item.item[item.is_retail ? 'retail_price' : 'wholesale_price'] *
+          item.quantity
+      )
+    }, 0) + (isDelivery ? taxaEntrega : 0)
 </script>
 
 <ul class="mb-4 max-h-[50vh] overflow-scroll text-center text-lg">
@@ -26,7 +34,7 @@
               100
             ).toFixed(2)}
           </span>
-          {item.item.name} - 
+          {item.item.name} -
           <span class="text-success">
             R${(
               (item.quantity *
@@ -51,5 +59,8 @@
 
 <h2 class="mx-10 flex justify-center text-3xl font-bold">
   Preço total:&nbsp;
-  <span class="text-success">R${(total/100).toFixed(2)}</span>
+  <span class="text-success">R${(total / 100).toFixed(2)}</span>
 </h2>
+{#if isDelivery}
+  <p class="text-center">Taxa entrega: <span class="text-success font-bold">R${(taxaEntrega / 100).toFixed(2)}</span></p>
+{/if}

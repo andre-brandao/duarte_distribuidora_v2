@@ -13,10 +13,10 @@
 
   export let formEndereco = {
     number: '',
-    id: '',
+    id: 0,
     created_at: '',
     updated_at: '',
-    customer_id: '',
+    customer_id: 0,
     cep: '',
     street: '',
     complement: '',
@@ -40,7 +40,7 @@
   async function addAddress() {
     isLoading = true
     try {
-      await trpc($page).customer.insertAddress.mutate({
+      const newAddress = await trpc($page).customer.insertAddress.mutate({
         customer_id: customer_id,
         cep: formEndereco.cep,
         street: formEndereco.street,
@@ -52,6 +52,12 @@
         country: 'BR',
       })
       toast.success('Endereco adicionado com sucesso!')
+
+      if(!newAddress) return
+
+      formEndereco.id = newAddress.id
+
+      console.log(formEndereco);
 
       dispatch('addressAdded', {
         customer_id,

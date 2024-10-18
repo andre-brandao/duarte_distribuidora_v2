@@ -52,6 +52,13 @@
       return 'table-zebra'
     }
   }
+
+  function formatarData(data: any) {
+    const date = new Date(data)
+    return new Intl.DateTimeFormat('pt-BR').format(date)
+  }
+
+
 </script>
 
 <h1 class="my-3 text-center text-3xl">Pedidos com pagamento pendente:</h1>
@@ -84,61 +91,58 @@
   {#if searchTerm && filteredPedidos.length === 0}
     <p class="text-center text-xl">
       <strong>Nenhum cliente encontrado.</strong>
-       Tente novamente!
+      Tente novamente!
     </p>
-  {:else}
-    {#if pedidos_fiados.length > 0}
-      <table class="table table-zebra">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Data do Pedido</th>
-            <th>Data de Vencimento</th>
-            <th>Status Pagamento</th>
-            <th>Dias para Vencimento</th>
-  
-            <th>Cliente</th>
-            <th>Total do pedido</th>
-  
-            <th>Pedido</th>
+  {:else if pedidos_fiados.length > 0}
+    <table class="table table-zebra">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Data do Pedido</th>
+          <th>Data de Vencimento</th>
+          <th>Status do pedido</th>
+          <th>Dias para Vencimento</th>
+
+          <th>Cliente</th>
+          <th>Total do pedido</th>
+
+          <th>Pedido</th>
+        </tr>
+      </thead>
+      <tbody>
+        {#each filteredPedidos as fiado}
+          <tr class={fiado.created_at ? getBgColor(fiado.created_at) : ''}>
+            <td>{fiado.id}</td>
+            <td>{formatarData(fiado.created_at) ?? 'Data não disponível'}</td>
+            <td>
+              {fiado.created_at ? getExpirationDate(fiado.created_at) : 'N/A'}
+            </td>
+            <td>{fiado.status}</td>
+            <td>
+              {#if fiado.created_at && getDaysToExpiry(fiado.created_at) >= 0}
+                {getDaysToExpiry(fiado.created_at)} dias
+              {:else}
+                Expirado
+              {/if}
+            </td>
+            <td>
+              {fiado.customer?.name}
+            </td>
+            <td class="font-bold">
+              R${(fiado.total / 100).toFixed(2)}
+            </td>
+            <td>
+              <a href="/admin/orders/{fiado.id}" class="badge badge-primary">
+                VISUALIZAR PEDIDO
+              </a>
+            </td>
           </tr>
-        </thead>
-        <tbody>
-          {#each filteredPedidos as fiado}
-            <tr class={fiado.created_at ? getBgColor(fiado.created_at) : ''}>
-              <td>{fiado.id}</td>
-              <td>{fiado.created_at ?? 'Data não disponível'}</td>
-              <td>
-                {fiado.created_at ? getExpirationDate(fiado.created_at) : 'N/A'}
-              </td>
-              <td>{fiado.status}</td>
-              <td>
-                {#if fiado.created_at && getDaysToExpiry(fiado.created_at) >= 0}
-                  {getDaysToExpiry(fiado.created_at)} dias
-                {:else}
-                  Expirado
-                {/if}
-              </td>
-              <td>
-                {fiado.customer?.name} - {fiado.customer?.cellphone ??
-                  'Telefone sem registro'} - {fiado.customer?.email}
-              </td>
-              <td class="font-bold">
-                R${(fiado.total / 100).toFixed(2)}
-              </td>
-              <td>
-                <a href="/admin/orders/{fiado.id}" class="badge badge-primary">
-                  VISUALIZAR PEDIDO
-                </a>
-              </td>
-            </tr>
-          {/each}
-        </tbody>
-      </table>
-    {:else}
-      <h1 class="mt-10 text-center text-4xl">
-        Nenhum pagamento está pendente!!!
-      </h1>
-    {/if}
+        {/each}
+      </tbody>
+    </table>
+  {:else}
+    <h1 class="mt-10 text-center text-4xl">
+      Nenhum pagamento está pendente!!!
+    </h1>
   {/if}
 </div>

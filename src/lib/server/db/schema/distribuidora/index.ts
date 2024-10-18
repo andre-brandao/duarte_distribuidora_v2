@@ -23,7 +23,17 @@ export const cashierTable = sqliteTable('caixas', {
     .notNull()
     .default('Fechado'),
   currency: integer('currency').notNull().default(0),
+  taxa_por_km: integer('taxa_por_km')
 })
+
+export const deliveryFeeTable = sqliteTable('delivery_fee', {
+  id: integer('id', { mode: 'number' }).primaryKey({ autoIncrement: true }),
+  taxa_por_km: integer('taxa_por_km').notNull().default(1),
+  created_at: text('created_at').default(sql`(CURRENT_TIMESTAMP)`),
+  updated_at: integer('updated_at', { mode: 'timestamp' }).$onUpdate(
+    () => new Date(),
+  ),
+});
 
 export const cachierRelations = relations(cashierTable, ({ one, many }) => ({
   transactions: many(cashierTransactionTable),

@@ -5,6 +5,7 @@ import {
   cashierTransactionTable,
   stockTransactionTable,
   userTable,
+  deliveryFeeTable,
 } from '$db/schema'
 
 import type {
@@ -24,6 +25,11 @@ function insertCashier(data: InsertCashier) {
 function getCashier() {
   return db.select().from(cashierTable)
 }
+
+function getFee(){
+  return db.select().from(deliveryFeeTable)
+}
+
 function getCashierById(id: SelectCashier['id']) {
   return db.select().from(cashierTable).where(eq(cashierTable.id, id)).limit(1)
 }
@@ -86,6 +92,10 @@ function updateCashier(id: SelectCashier['id'], data: Partial<SelectCashier>) {
   return db.update(cashierTable).set(data).where(eq(cashierTable.id, id))
 }
 
+async function updateKmForAllCaixas(newTaxaPorKm: number) {
+  return db.update(deliveryFeeTable).set({ taxa_por_km: newTaxaPorKm })
+}
+
 export const distribuidora = {
   insertCashier,
   getCashier,
@@ -98,4 +108,6 @@ export const distribuidora = {
   getMotoboys: () => {
     return db.select().from(userTable).where(eq(userTable.role, 'motoboy'))
   },
+  updateKmForAllCaixas,
+  getFee
 }

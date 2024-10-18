@@ -1,211 +1,127 @@
 <script lang="ts">
-  import { toast } from 'svelte-sonner'
-  import { trpc } from '$trpc/client'
+  import type { PageData } from './$types'
+
+  let { data }: { data: PageData } = $props()
+
+  import {
+    createTable,
+    Subscribe,
+    Render,
+    createRender,
+    type DataLabel,
+    type Column,
+    type Table,
+  } from '@andre-brandao/svelte-headless-table'
+  import {
+    addSortBy,
+    addColumnOrder,
+    addColumnFilters,
+    addSelectedRows,
+    addResizedColumns,
+    addGridLayout,
+    addPagination,
+  } from '@andre-brandao/svelte-headless-table/plugins'
+  import {
+    readable,
+    writable,
+    type Writable,
+    type Readable,
+  } from 'svelte/store'
+  import TextFilter from '$lib/components/newTable/filters/TextFilter.svelte'
   import { page } from '$app/stores'
 
-  import { modal, FormModal } from '$lib/components/modal'
-
-  import SuperSelect from '$lib/components/input/Select.svelte'
-  import {
-    renderComponent,
-    type ColumnDef,
-    type TableOptions,
-  } from '@tanstack/svelte-table'
-  import Datatable from '$components/table/Datatable.svelte'
-  import {
-    type TableState,
-    getParams,
-    EditRowButton,
-    EditRowInput,
-    RowActions,
-  } from '$lib/components/table'
-  import type { RouterOutputs, RouterInputs } from '$trpc/router'
+  import SelectIndicator from '$lib/components/newTable/edit/SelectIndicator.svelte'
+  import EditableCell from '$lib/components/newTable/edit/EditableCell.svelte'
   import { goto } from '$app/navigation'
-  import EditRowCurrency from '$lib/components/table/EditRowCurrency.svelte'
-  import { createRawSnippet } from 'svelte';
+  // import type { SelectUser } from '$drizzle/schema'
+  import { onDestroy, onMount } from 'svelte'
+  import {
+    SSRTable,
+    SSRFilter,
+    type SSRTableProps,
+  } from '$lib/components/newTable/ssr/index.svelte'
+  import { debounce } from '$lib/utils'
   import SimpleSelect from './SimpleSelect.svelte'
   import UsedCredits from './UsedCredits.svelte'
+  import EditableCurrency from '$lib/components/newTable/edit/EditableCurrency.svelte'
+  import GoToDetails from '$lib/components/newTable/goToDetails.svelte'
+  import { toast } from 'svelte-sonner'
+  import { trpc } from '$trpc/client'
+  import { modal, FormModal } from '$lib/components/modal'
+  import type { RouterInputs } from '$trpc/router'
+  import { invalidate } from '$app/navigation'
 
+  const usernameFilter = debounce(SSRFilter.update_many, 500)
+  const emailFilter = debounce(SSRFilter.update_many, 500)
+  console.log(data)
 
-  type Customer = RouterOutputs['customer']['getPaginatedCustomers']['rows'][0]
+  const tableRows = writable(data.rows ?? [])
 
-  const columns: ColumnDef<Customer>[] = [
-    {
-      header: 'Name',
-      accessorKey: 'name',
-      cell: info =>
-        renderComponent(EditRowInput<Customer>, {
-          id: info.row.original.id,
-          colID: 'name',
-          editT: 'text',
-          value: info.getValue(),
-        }),
-      footer: info => info.column.id,
-    },
-    {
-      header: 'CPF/CNPJ',
-      accessorKey: 'cpf_cnpj',
-      cell: info =>
-        renderComponent(EditRowInput<Customer>, {
-          id: info.row.original.id,
-          colID: 'cpf_cnpj',
-          editT: 'text',
-          value: info.getValue(),
-        }),
-    },
-    {
-      header: 'Tipo Cliente',
-      accessorKey: 'is_retail',
-      cell: info =>
-        renderComponent(SimpleSelect, {
-          id: info.row.original.id,
-          colID: 'is_retail',
-          value: info.getValue(),
-          options: [
-            {
-              label: 'Pessoa Juridica',
-              value: false,
-            },
-            {
-              label: 'Pessoa Fisica',
-              value: true,
-            },
-          ],
-        }),
-    },
-    {
-      header: 'RG/IE',
-      accessorKey: 'rg_ie',
-      cell: info =>
-        renderComponent(EditRowInput<Customer>, {
-          id: info.row.original.id,
-          colID: 'rg_ie',
-          editT: 'text',
-          value: info.getValue(),
-        }),
-    },
+  $effect(() => {
+    console.log('data.rows', data.rows)
 
-    {
-      // accessorFn: row => row.description,
-      header: () => 'Email',
-      accessorKey: 'email',
-      cell: info =>
-        renderComponent(EditRowInput<Customer>, {
-          id: info.row.original.id,
-          colID: 'email',
-          editT: 'text',
-          value: info.getValue(),
-        }),
-      footer: info => info.column.id,
-    },
-    {
-      header: 'Phone',
-      accessorKey: 'phone',
-      cell: info =>
-        renderComponent(EditRowInput<Customer>, {
-          id: info.row.original.id,
-          colID: 'phone',
-          editT: 'text',
-          value: info.getValue(),
-        }),
-    },
-    {
-      header: 'Cell Phone',
-      accessorKey: 'cellphone',
-      cell: info =>
-        renderComponent(EditRowInput<Customer>, {
-          id: info.row.original.id,
-          colID: 'cellphone',
-          editT: 'text',
-          value: info.getValue(),
-        }),
-    },
+    tableRows.set(data.rows)
+  })
 
-    {
-      header: 'Used Credit',
-      accessorKey: 'used_credit',
-      cell: info =>
-        renderComponent(UsedCredits, {
-          id: info.row.original.id,
-          value: info.getValue(),
-        }),
-    },
-    {
-      header: 'Max Credit',
-      accessorKey: 'max_credit',
-      cell: info =>
-        renderComponent(EditRowCurrency<Customer>, {
-          id: info.row.original.id,
-          colID: 'max_credit',
-          editT: 'number',
-          value: info.getValue(),
-        }),
-    },
+  let Filters = $derived($page.url)
 
-    {
-      id: 'edit',
-      header: () => 'Edit',
-      cell: info =>
-        renderComponent(EditRowButton<Customer>, {
-          row: info.row.original,
-        }),
-      // footer: info => info.column.id,
-    },
-    {
-      id: 'actions',
-      header: () => 'Actions',
-      cell: info =>
-        renderComponent(RowActions, {
-          actions: [
-            {
-              name: 'View Details',
-              fn: () => {
-                goto(`/admin/customer/${info.row.original.id}`)
-              },
-            },
-          ],
-        }),
-    },
-  ]
-
-  async function load(s: TableState) {
-    const resp = await trpc($page).customer.getPaginatedCustomers.query(s)
-
-    return {
-      data: resp.rows ?? [],
-      count: resp.total ?? 0,
-    }
+  function Filters_get(name: string) {
+    return Filters.searchParams.get(name)
   }
 
-  async function save(changes: { [key: string]: Customer }) {
-    for (const key in changes) {
-      try {
-        const resp = await trpc($page).customer.updateCustomer.mutate({
-          id: Number(key),
-          customer: {
-            cellphone: changes[key].cellphone ?? undefined,
-            max_credit: changes[key].max_credit,
-            phone: changes[key].phone ?? undefined,
-            name: changes[key].name,
-            email: changes[key].email ?? undefined,
-            is_retail: changes[key].is_retail ?? undefined
-          },
-        })
+  function Filters_update(name: string, value: string) {
+    const url = new URL(Filters)
+    if (value !== '') url.searchParams.set(name, value)
+    else url.searchParams.delete(name)
 
-        if (resp) {
-          toast.success(`#${key} 'Cliente updated'`)
-          window.location.reload()
-        }
-      } catch (error) {
-        toast.error(`#${key} 'Cliente update failed'`)
+    goto(url, { keepFocus: true })
+  }
+
+  function Filters_clear(...params: string[]) {
+    const url = new URL(Filters)
+    params.forEach(p => url.searchParams.delete(p))
+    goto(url, { keepFocus: true })
+  }
+
+  function Filters_isFiltered(...params: string[]) {
+    return params.length > 0 && params.some(p => Filters.searchParams.has(p))
+  }
+
+  function Filters_update_many(params: Record<string, string>) {
+    const url = new URL(Filters)
+    Object.entries(params).forEach(([name, value]) => {
+      if (!value) {
+        url.searchParams.delete(name)
       }
-    }
-    return {
-      success: true,
-    }
+      if (value !== '') url.searchParams.set(name, value)
+      else url.searchParams.delete(name)
+    })
+
+    const searchParams = url.pathname + url.search
+    goto(searchParams, { keepFocus: true })
   }
 
-  function add(invalidate: Function) {
+  async function handleUpdate(
+    newItem: any,
+    key: string,
+    idx: number,
+    currentItem: any,
+  ) {
+    try {
+      await trpc($page).customer.updateCustomer.mutate({
+        id: newItem.id,
+        customer: { [key]: newItem[key] },
+      })
+      toast.success('Atualizado com sucesso!')
+    } catch (error: any) {
+      toast.error('Erro ao atualizar')
+      console.error(error)
+      $tableRows[idx] = currentItem
+    }
+    $tableRows = $tableRows
+  }
+
+  function add() {
     modal.open(FormModal<RouterInputs['customer']['insertCustomer']>, {
       title: 'Create new Customer',
       fields: [
@@ -246,19 +162,281 @@
           const resp = await trpc($page).customer.insertCustomer.mutate(toSave)
 
           if (resp) {
-            toast.success('Customer Created')
-            invalidate()
+            toast.success('Cliente criado')
+            // invalidate()
+            window.location.reload()
           }
         } catch (error: any) {
           toast.error(error.message)
           return error.message
         }
-        invalidate()
+        // invalidate()
       },
     })
   }
 </script>
 
-<div class=" h-[70vh] overflow-x-auto p-4">
-  <Datatable columns={columns} {load} {save} {add} />
-</div>
+<section class="container mx-auto px-4">
+  <div class="mt-2 flex justify-between items-center ">
+    <h1 class="text-2xl font-semibold">Clientes:</h1>
+    <button class="btn btn-primary min-w-96" onclick={add}>Criar cliente</button>
+  </div>
+</section>
+<SSRTable
+  count={readable(data.count)}
+  {tableRows}
+  columns={table => [
+    // table.display({
+    //   id: 'selected',
+    //   header: '',
+    //   cell: ({ row, column }, { pluginStates }) => {
+    //     const { isSomeSubRowsSelected, isSelected } =
+    //       pluginStates.select.getRowState(row)
+    //     return createRender(SelectIndicator, {
+    //       isSelected,
+    //       isSomeSubRowsSelected,
+    //     })
+    //   },
+    // }),
+    table.column({
+      header: 'ID',
+      accessor: 'id',
+    }),
+    table.column({
+      header: 'Name',
+      accessor: 'name',
+      cell: ({ column, row, value }) =>
+        createRender(EditableCell, {
+          row,
+          column,
+          value,
+          onUpdateValue: async (
+            rowDataId: string,
+            columnId: string,
+            newValue: unknown,
+          ) => {
+            console.log(rowDataId, columnId, newValue)
+            // In this case, the dataId of each item is its index in $tableRows.
+            // You can also handle any server-synchronization necessary here.
+            const idx = parseInt(rowDataId)
+            const currentItem = $tableRows[idx]
+            const key = columnId // Cast as `keyof YourDataItem`
+            const newItem = { ...currentItem, [key]: newValue }
+            console.log(newItem)
+            $tableRows[idx] = newItem
+            $tableRows = $tableRows
+
+            handleUpdate(newItem, key, idx, currentItem)
+
+            // Handle any server-synchronization.
+          },
+        }),
+      plugins: {
+        sort: {
+          invert: false,
+          // disable: true,
+        },
+        filter: {
+          initialFilterValue: '',
+          render: ({ filterValue, values, preFilteredValues }) =>
+            createRender(TextFilter, {
+              filterValue,
+              values,
+              preFilteredValues,
+              change: value => {
+                console.log('change username', value)
+
+                Filters_update_many({
+                  name: value,
+                  page: '1',
+                })
+              },
+            }),
+        },
+      },
+    }),
+    table.column({
+      header: 'Email',
+      accessor: 'email',
+      cell: ({ column, row, value }) =>
+        createRender(EditableCell, {
+          row,
+          column,
+          value,
+          onUpdateValue: (
+            rowDataId: string,
+            columnId: string,
+            newValue: unknown,
+          ) => {
+            console.log(rowDataId, columnId, newValue)
+            // In this case, the dataId of each item is its index in $tableRows.
+            // You can also handle any server-synchronization necessary here.
+            const idx = parseInt(rowDataId)
+            const currentItem = $tableRows[idx]
+            const key = columnId // Cast as `keyof YourDataItem`
+            const newItem = { ...currentItem, [key]: newValue }
+            console.log(newItem)
+            $tableRows[idx] = newItem
+            $tableRows = $tableRows
+
+            handleUpdate(newItem, key, idx, currentItem)
+            // Handle any server-synchronization.
+          },
+        }),
+      plugins: {
+        sort: {
+          invert: false,
+          // disable: true,
+        },
+        filter: {
+          initialFilterValue: '',
+          render: ({ filterValue, values, preFilteredValues }) =>
+            createRender(TextFilter, {
+              filterValue,
+              values,
+              preFilteredValues,
+              change: value =>
+                Filters_update_many({
+                  email: value,
+                  page: `1`,
+                }),
+            }),
+        },
+      },
+    }),
+    table.column({
+      header: 'CPF/CNPJ',
+      accessor: 'cpf_cnpj',
+      cell: ({ column, row, value }) =>
+        createRender(EditableCell, {
+          row,
+          column,
+          value,
+          onUpdateValue: (
+            rowDataId: string,
+            columnId: string,
+            newValue: unknown,
+          ) => {
+            console.log(rowDataId, columnId, newValue)
+            const idx = parseInt(rowDataId)
+            const currentItem = $tableRows[idx]
+            const key = columnId // Cast as `keyof YourDataItem`
+            const newItem = { ...currentItem, [key]: newValue }
+            console.log(newItem)
+            $tableRows[idx] = newItem
+            $tableRows = $tableRows
+
+            handleUpdate(newItem, key, idx, currentItem)
+            // Handle any server-synchronization.
+          },
+        }),
+    }),
+    table.column({
+      header: 'Tipo cliente',
+      accessor: 'is_retail',
+      cell: ({ column, row, value }) =>
+        createRender(SimpleSelect, {
+          id: row.id,
+          value: value,
+        }),
+    }),
+    table.column({
+      header: 'RG/IE',
+      accessor: 'rg_ie',
+      cell: ({ column, row, value }) =>
+        createRender(EditableCell, {
+          row,
+          column,
+          value,
+          onUpdateValue: (
+            rowDataId: string,
+            columnId: string,
+            newValue: unknown,
+          ) => {
+            console.log(rowDataId, columnId, newValue)
+            const idx = parseInt(rowDataId)
+            const currentItem = $tableRows[idx]
+            const key = columnId // Cast as `keyof YourDataItem`
+            const newItem = { ...currentItem, [key]: newValue }
+            console.log(newItem)
+            $tableRows[idx] = newItem
+            $tableRows = $tableRows
+
+            handleUpdate(newItem, key, idx, currentItem)
+            // Handle any server-synchronization.
+          },
+        }),
+    }),
+    table.column({
+      header: 'Telefone',
+      accessor: 'phone',
+      cell: ({ column, row, value }) =>
+        createRender(EditableCell, {
+          row,
+          column,
+          value,
+          onUpdateValue: (
+            rowDataId: string,
+            columnId: string,
+            newValue: unknown,
+          ) => {
+            console.log(rowDataId, columnId, newValue)
+            const idx = parseInt(rowDataId)
+            const currentItem = $tableRows[idx]
+            const key = columnId // Cast as `keyof YourDataItem`
+            const newItem = { ...currentItem, [key]: newValue }
+            console.log(newItem)
+            $tableRows[idx] = newItem
+            $tableRows = $tableRows
+
+            handleUpdate(newItem, key, idx, currentItem)
+            // Handle any server-synchronization.
+          },
+        }),
+    }),
+    table.column({
+      header: 'Creditos usados',
+      accessor: '',
+      cell: ({ column, row, value }) =>
+        createRender(UsedCredits, {
+          id: row.id,
+        }),
+    }),
+    table.column({
+      header: 'Crédito Máximo',
+      accessor: 'max_credit',
+      cell: ({ column, row, value }) =>
+        createRender(EditableCurrency, {
+          row,
+          column,
+          value,
+          onUpdateValue: (
+            rowDataId: string,
+            columnId: string,
+            newValue: unknown,
+          ) => {
+            console.log(rowDataId, columnId, newValue)
+            const idx = parseInt(rowDataId)
+            const currentItem = $tableRows[idx]
+            const key = columnId // Cast as `keyof YourDataItem`
+            const newItem = { ...currentItem, [key]: newValue }
+            console.log(newItem)
+            $tableRows[idx] = newItem
+            $tableRows = $tableRows
+
+            handleUpdate(newItem, key, idx, currentItem)
+            // Handle any server-synchronization.
+          },
+        }),
+    }),
+    table.column({
+      header: 'Ver detalhes',
+      accessor: item => item,
+      cell: ({ value }) =>
+        createRender(GoToDetails, {
+          value: `/admin/customer/${value.id}`,
+          text: 'Ir para detalhes',
+        }),
+    }),
+  ]}
+/>

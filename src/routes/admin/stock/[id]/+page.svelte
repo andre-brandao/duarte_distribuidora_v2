@@ -168,8 +168,8 @@
         <Datatable columns={defaultColumns} {load} />
       </div>
 
-      <div class="w-full max-w-[50%] rounded-box border">
-        <div class="h-[300px] rounded border p-4">
+      <div class="w-full max-w-[50%] rounded-box border p-4">
+        <div class="h-[300px] rounded p-4">
           <Chart
             data={chartData}
             x="created_at"

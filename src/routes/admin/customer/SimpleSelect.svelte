@@ -28,13 +28,13 @@
   })
 </script>
 
-{#if rInEdit !== true}
+<!-- {#if rInEdit !== true}
   <span>
     {value ? 'Fisica':'Juridica'}
   </span>
-{:else}
+{:else} -->
   <select class="select" bind:value={changedRow['is_retail']}>
     <option value={false}>Pessoa juridica</option>
     <option value={true}>Pessoa fisica</option>
   </select>
-{/if}
+<!-- {/if} -->

@@ -27,13 +27,16 @@ export const bugReportTable = sqliteTable('bugReport', {
 //   reporter: one(userTable),
 // }))
 
-
 export type SelectBugReport = typeof bugReportTable.$inferSelect
 export type InsertBugReport = typeof bugReportTable.$inferInsert
 
 export const logsTable = sqliteTable('logs', {
   id: integer('id', { mode: 'number' }).primaryKey({ autoIncrement: true }),
   created_at: text('created_at').default(sql`(CURRENT_TIMESTAMP)`),
+  type: text('type', {
+    enum: ['LOG', 'SYSTEM', 'ERROR', 'CAIXA'],
+  }).notNull(),
+  pathname: text('pathname'),
   created_by: text('created_by')
     .references(() => userTable.id, {
       onDelete: 'set null',
@@ -42,13 +45,14 @@ export const logsTable = sqliteTable('logs', {
   text: text('text').notNull(),
   routeName: text('routeName'),
   metadata: text('metadata', { mode: 'json' }),
-  error: text('error'),
+  error: text('error', { mode: 'json' }),
+  currency: integer('currency'),
 })
 
 export const logRelations = relations(logsTable, ({ one }) => ({
   reporter: one(userTable, {
-    fields:[logsTable.created_by],
-    references:[userTable.id]
+    fields: [logsTable.created_by],
+    references: [userTable.id],
   }),
 }))
 

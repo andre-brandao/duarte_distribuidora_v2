@@ -15,6 +15,8 @@ import { emailTemplate, sendMail } from '$lib/server/email'
 import { paramsSchema } from '$lib/components/table'
 import { tableHelper } from '$lib/server/db/utils'
 import { userTable } from '$lib/server/db/schema'
+import { generateId } from 'lucia'
+import { permissionsEnum, roleEnum } from '$lib/utils/permissions'
 
 export const auth = router({
   logOut: publicProcedure.query(async ({ ctx }) => {
@@ -193,7 +195,7 @@ export const auth = router({
         userId: z.string(),
         meta: z.object({
           redirect: z.string().optional(),
-          permissions: z.array(z.enum([ 'receber_fiado','editar_produtos','editar_estoque','ver_relatorios','customer','motoboy','editar_caixas']))
+          permissions: z.array(z.enum(permissionsEnum))
         }),
       }),
     )
@@ -207,7 +209,7 @@ export const auth = router({
     .input(
       z.object({
         userId: z.string(),
-        role: z.enum(['admin', 'employee', 'customer', 'motoboy', 'caixa']),
+        role: z.enum(roleEnum),
       }),
     )
     .mutation(async ({ input }) => {
@@ -217,5 +219,36 @@ export const auth = router({
 
     getMotoboys: publicProcedure.query(() => {
       return userController.getMotoboys()
+    }),
+
+    insertUser: publicProcedure
+    .use(middleware.auth)
+    .use(middleware.logged)
+    .input(
+      z.object({
+        username:z.string(),
+        email:z.string(),
+        role:z.enum(roleEnum),
+      })
+    )
+    .mutation(async ({ input }) => {
+      return await userController.insertUser({...input,id:generateId(15)})
+    }),
+    updateUser: publicProcedure
+    .use(middleware.auth)
+    .use(middleware.logged)
+    .input(
+      z.object({
+        userId: z.string(),
+        user: z.object({
+          username: z.string().optional(),
+          email: z.string().optional(),
+          role: z.enum(roleEnum).optional(),
+        }),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const { userId, user } = input;
+      return await userController.updateUser(userId, user);
     }),
 })

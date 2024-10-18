@@ -17,13 +17,13 @@
 
   let troco = 0
 
-  troco = order_details?.payments?.reduce(
-    (acc, payment) => acc + (payment.troco ?? 0),
-    0,
-  ) ?? 0
+  troco =
+    order_details?.payments?.reduce(
+      (acc, payment) => acc + (payment.troco ?? 0),
+      0,
+    ) ?? 0
 
   let amount_paid_order = (order_details?.amount_paid ?? 0) - troco
-
 </script>
 
 {#if order_details}
@@ -77,10 +77,27 @@
           </table>
         </div>
 
-        <div class="mt-4 space-y-6">
+        {#if order_details.taxa_entrega}
+        
+        <dl class="flex items-center justify-between gap-4 pt-2">
+          <dt class="text-md text-opacity-90">Subtotal:</dt>
+          <dd class="text-lg text-opacity-90">
+            R${((order_details.total - order_details.taxa_entrega) / 100).toFixed(2)}
+          </dd>
+        </dl>
+        
+        <dl class="flex items-center justify-between gap-4 pt-2">
+          <dt class="text-sm text-opacity-90">Taxa entrega:</dt>
+          <dd class="text-md text-opacity-90">
+            R${(order_details.taxa_entrega / 100).toFixed(2)}
+          </dd>
+        </dl>
+        {/if}
+
+        <div class=" space-y-6">
           <dl class="flex items-center justify-between gap-4 pt-2">
             <dt class="text-lg font-bold text-opacity-90">Total:</dt>
-            <dd class="text-xl font-bold text-opacity-90">
+            <dd class="text-xl font-bold text-success">
               R${(order_details.total / 100).toFixed(2)}
             </dd>
           </dl>
@@ -92,12 +109,21 @@
                 <CardPayments {payment} {i} />
               {/each}
             </div>
-            {#if order_details.is_fiado && order_details.amount_paid - troco < order_details.total}
+            {#if order_details.amount_paid - troco < order_details.total}
               <div class="mt-5 flex flex-col gap-5">
                 <h1 class="text-center font-bold">
                   O pagamento ainda está pendente <span class="text-error">
                     pendentes!
-                  </span> Ainda faltam <span class="text-success">R${(((order_details.total)-(order_details.amount_paid - troco))/100).toFixed(2)}</span> para pagar 
+                  </span>
+                  Ainda faltam
+                  <span class="text-success">
+                    R${(
+                      (order_details.total -
+                        (order_details.amount_paid - troco)) /
+                      100
+                    ).toFixed(2)}
+                  </span>
+                   para pagar
                 </h1>
                 <button
                   class="btn btn-primary"
@@ -173,7 +199,7 @@
     {JSON.stringify(order_details, null, 2)}
 </pre> -->
 
-{#if order_details?.is_fiado}
+{#if order_details.amount_paid - troco < order_details.total}
   <dialog class="modal" bind:this={isOpenModal}>
     <div class="modal-box max-w-2xl">
       <PaymentFiado
