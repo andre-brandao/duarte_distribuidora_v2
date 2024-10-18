@@ -201,7 +201,7 @@
     {/if}
     <div class="-mx-4 -my-2 overflow-x-scroll sm:-mx-6 lg:-mx-8">
       <div class="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
-        <div class="overflow-scroll border border-base-300 md:rounded-lg">
+        <div class="overflow-scroll min-h-[50vh] border border-base-300 md:rounded-lg">
           <table {...$tableAttrs} class="min-w-full divide-y divide-base-300">
             <thead class="bg-base-200 bg-opacity-60">
               {#each $headerRows as headerRow (headerRow.id)}

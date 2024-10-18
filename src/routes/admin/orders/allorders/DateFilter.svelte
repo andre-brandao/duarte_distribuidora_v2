@@ -10,7 +10,7 @@
 
   let startDate: Date | string = today
   let endDate: Date | string = today
-  let dateFormat = 'yyyy-MM-dd'
+  let dateFormat = 'dd/MM/yyyy'
   let isOpen = false
 
   let formattedStartDate = ''
