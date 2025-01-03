@@ -27,4 +27,4 @@
 <h2 class="text-center text-xl font-semibold">
   {title}
 </h2>
-<canvas class="pt-10" use:chart {id} {width} {height}></canvas>
+<canvas use:chart {id} {width} {height}></canvas>

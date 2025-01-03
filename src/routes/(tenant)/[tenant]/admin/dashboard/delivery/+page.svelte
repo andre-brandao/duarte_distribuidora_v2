@@ -5,6 +5,7 @@
   import type { PageData } from './$types';
   import { RecentSales } from '$lib/components/dashboard/admin'
   import { scaleBand } from 'd3-scale'
+  import SvChart from '../SvChart.svelte'
   
   let { data }: { data: PageData } = $props();
   let dataCard = 
@@ -36,7 +37,7 @@
     },
   ]
 
-  let larguraGrafico = "height:" + dataCard.length * 60+"px;";
+  let larguraGrafico = "height:" + dataCard.length * 30+"px;";
 </script>
 
 <NavDashboard 
@@ -72,53 +73,35 @@ cardQuatro={{
     <!-- <Card.Content class="flex flex-col md:flex-row gap-4"> -->
     <Card.Content class="flex flex-wrap">
       <div class="w-full pr-3">
-        <h2>
-          Relatório Motoboy (Soma a quantidade de entrega e o valor total das taxas de entrega) - vai ter que ser um gráfico em pé, mostrando todos os motoboys e a altura vai variar conforme a quantidade de motoboys naquela distribuidora
-        </h2>
+        <SvChart 
+        config={{
+          type : "bar", 
+          data : {
+            labels : dataCard.map((d) => d.NomeMotoboy),
+            datasets:
+            [
+              {
+                label : "Total",
+                data : dataCard.map((d) => d.valueRelatorio),
+                backgroundColor : 
+                [
+                  'rgba(255, 217, 0)'
+                ],
+                barThickness : 30,
+              }
+            ]
+          },
+          options: {
+            indexAxis: 'y',
+          }
+        }}
+        height={dataCard.length * 60}
+        title={"Relatório Motoboy (Soma a quantidade de entrega e o valor total das taxas de entrega) - vai ter que ser um gráfico em pé, mostrando todos os motoboys e a altura vai variar conforme a quantidade de motoboys naquela distribuidora"}
+        />
         <!-- Axis = Heixo -->
         <!-- placement = localização -->
-        <!-- Scalable Vector Graphics -->
-        <div class="{larguraGrafico} p-4 border rounded" style="{larguraGrafico}">
-          <Chart
-            data={dataCard}
-            x="valueRelatorio"
-            xNice
-            xPadding={[20, 20]}
-            y="NomeMotoboy"
-            yScale={scaleBand().padding(0.4)}
-            padding={{ left: 16, bottom: 24 }}
-          >
-            <Svg>
-              <Axis placement="bottom" grid rule />
-              <Axis
-                placement="left"
-                rule
-              />
-              <Rule x={0} />
-              <Bars strokeWidth={1} class="fill-primary"/>
-              <Labels format="integer" />
-            </Svg>
-          </Chart>
-        </div>                
+        <!-- Scalable Vector Graphics -->              
     </div>
-    <!-- <div class="w-full pr-3">
-      <h2>Motoboys com maior número de entregas</h2>
-      <div class="h-[300px] p-4 border rounded">
-        
-      </div>
-    </div> -->
-    <!-- <div class="w-full">
-      <h2>Tempo médio de entrega (Vai mostrar o dia, por padrão 1 semana e dps a data que a pessoa selecionar, tem que ter limite )</h2>
-      <div class="h-[300px] p-4 border rounded">
-        
-      </div>
-    </div> -->
-    <!-- <div class="w-full">
-      <h2>Area com maior número de entregas</h2>
-      <div class="h-[300px] p-4 border rounded">
-        
-      </div>
-    </div> -->
   </Card.Content>
 </Card.Root>
 <Card.Root class="w-full lg:w-3/12">
